@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>羊了个羊 · 消消乐</title>
+<style>
+/* ============================================================
+   全局样式 —— 自然清新配色：米白 / 浅绿 / 木色
+   ============================================================ */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+               "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  color: #4a4033;
+  background: linear-gradient(165deg, #fdfaf3 0%, #f3f7ec 55%, #eef3e2 100%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------- 顶部信息栏 ---------- */
+#hud {
+  flex: none;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 10px 16px 12px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e8e2d3;
+  box-shadow: 0 2px 12px rgba(170, 150, 115, 0.07);
+}
+
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #9c907c;
+}
+
+.hud-item b {
+  font-size: 18px;
+  font-weight: 800;
+  color: #5f8a4c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 棋盘区 ---------- */
+#board-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 6px;
+}
+
+#board {
+  position: relative;
+  border-radius: 22px;
+  background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%);
+}
+
+/* ---------- 底部：槽位 + 暂存区 + 道具 ---------- */
+#bottom {
+  flex: none;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 22px 22px 0 0;
+  border-top: 1px solid #eae4d5;
+  box-shadow: 0 -6px 24px rgba(160, 140, 110, 0.1);
+}
+
+#slots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  background: #f0e9da;
+  border-radius: 14px;
+  box-shadow: inset 0 2px 6px rgba(150, 130, 95, 0.12);
+}
+
+.slot-cell {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #e4dbc8;
+  box-shadow: inset 0 2px 4px rgba(120, 100, 70, 0.12);
+}
+
+#stash {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+#stash.hidden { display: none; }
+
+.stash-cell {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #efe4d3;
+  border: 1px dashed #d3c4a8;
+}
+
+#props {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.prop-btn {
+  flex: 1;
+  padding: 11px 2px;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  color: #fff;
+  background: linear-gradient(180deg, #a6d494 0%, #82bd6c 100%);
+  box-shadow: 0 3px 0 #6a9c56, 0 5px 14px rgba(120, 170, 100, 0.32);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+              background 0.2s ease, color 0.2s ease;
+}
+
+.prop-btn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 #6a9c56;
+}
+
+.prop-btn:disabled {
+  background: #ded8ca;
+  color: #b0a896;
+  box-shadow: none;
+  cursor: default;
+}
+
+/* ---------- 卡片层（覆盖全屏，用 fixed 定位方便飞行） ---------- */
+#card-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fffef9 0%, #f8f2e5 100%);
+  border: 1.5px solid #e5dbc7;
+  box-shadow: 0 2px 0 rgba(185, 165, 130, 0.4),
+              0 3px 8px rgba(150, 130, 100, 0.16);
+  pointer-events: auto;
+  cursor: pointer;
+  will-change: transform;
+  transition: transform 0.32s cubic-bezier(0.34, 0.9, 0.4, 1),
+              opacity 0.26s ease,
+              width 0.15s ease,
+              height 0.15s ease,
+              font-size 0.15s ease;
+}
+
+.card .face {
+  display: block;
+  line-height: 1;
+  transition: transform 0.15s ease;
+  pointer-events: none;
+}
+
+/* 被遮挡的卡片：变暗 + 禁止点击 */
+.card.blocked {
+  cursor: default;
+}
+
+.card.blocked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 11px;
+  background: rgba(92, 80, 62, 0.46);
+  pointer-events: none;
+}
+
+/* 点击时的抖动反馈（用于不能点的卡片） */
+@keyframes shakeX {
+  0%, 100% { margin-left: 0; }
+  25% { margin-left: -4px; }
+  75% { margin-left: 4px; }
+}
+.card.shake { animation: shakeX 0.24s ease; }
+
+/* ---------- 飘分文字 ---------- */
+.float-text {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: 900;
+  color: #f5a623;
+  text-shadow: 0 1px 0 #fff, 0 2px 10px rgba(245, 166, 35, 0.6);
+  pointer-events: none;
+  z-index: 2000;
+  animation: floatUp 0.95s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes floatUp {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  25%  { opacity: 1; transform: translate(-50%, -85%) scale(1.25); }
+  100% { opacity: 0; transform: translate(-50%, -200%) scale(1); }
+}
+
+/* ---------- 遮罩层（开始 / 胜利 / 失败） ---------- */
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(62, 52, 40, 0.42);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+#overlay.hidden { display: none; }
+
+.overlay-card {
+  width: 100%;
+  max-width: 320px;
+  padding: 30px 24px 26px;
+  text-align: center;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fffdf8 0%, #f7f2e5 100%);
+  box-shadow: 0 22px 55px rgba(80, 62, 40, 0.28);
+  animation: popIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.ov-emoji {
+  font-size: 54px;
+  line-height: 1;
+  margin-bottom: 12px;
+  animation: bob 2.2s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+
+.overlay-card h2 {
+  margin: 0 0 10px;
+  font-size: 23px;
+  color: #5f8a4c;
+  letter-spacing: 1px;
+}
+
+.overlay-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #9c907c;
+}
+
+.main-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #fff;
+  background: linear-gradient(180deg, #a2d390 0%, #7cba67 100%);
+  box-shadow: 0 4px 0 #649a52, 0 8px 22px rgba(120, 170, 100, 0.38);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.main-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #649a52;
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== 顶部信息栏 ==================== -->
+<header id="hud">
+  <div class="hud-item"><span>关卡</span><b id="level-val">1</b></div>
+  <div class="hud-item"><span>剩余</span><b id="remain-val">0</b></div>
+  <div class="hud-item"><span>分数</span><b id="score-val">0</b></div>
+</header>
+
+<!-- ==================== 卡片堆叠区 ==================== -->
+<main id="board-wrap">
+  <div id="board"></div>
+</main>
+
+<!-- ==================== 底部：槽位 / 暂存区 / 道具 ==================== -->
+<footer id="bottom">
+  <div id="slots"></div>
+
+  <div id="stash" class="hidden"></div>
+
+  <div id="props">
+    <button class="prop-btn" data-prop="shuffle">🔀 洗牌</button>
+    <button class="prop-btn" data-prop="undo">↩️ 撤销</button>
+    <button class="prop-btn" data-prop="remove">📤 移出</button>
+  </div>
+</footer>
+
+<!-- 卡片渲染层（fixed 定位，覆盖全屏） -->
+<div id="card-layer"></div>
+
+<!-- 遮罩层 -->
+<div id="overlay" class="hidden">
+  <div class="overlay-card">
+    <div class="ov-emoji" id="ov-emoji">🐑</div>
+    <h2 id="ov-title">羊了个羊</h2>
+    <p id="ov-desc"></p>
+    <button id="ov-btn" class="main-btn">开始游戏</button>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+ *  羊了个羊 · 消消乐
+ *  ----------------------------------------------------------------
+ *  架构说明：
+ *    1. 数据层：state.cards 保存所有卡片的逻辑数据（图案、坐标、状态）
+ *    2. 渲染层：每个卡片对应一个 DOM 元素，统一放在 #card-layer 中，
+ *               用 transform: translate() 定位，方便做飞行动画
+ *    3. 逻辑层：遮挡判定 / 槽位三消 / 道具 / 胜负判断
+ * ================================================================ */
+
+/* ---------------- 常量配置 ---------------- */
+const EMOJIS = ['🐑', '🌿', '🥕', '🍎', '🌻', '🪵', '🧶', '🍄']; // 图案池
+const GRID = 7;                 // 棋盘网格边长（每层 7×7 个落点）
+const SLOT_COUNT = 7;           // 槽位数量
+const STASH_COUNT = 3;          // 暂存区数量
+const OVERLAP_THRESHOLD = 0.06; // 遮挡判定阈值（重叠面积 / 单卡面积）
+const FLY_DURATION = 340;       // 飞入槽位的动画时长（ms）
+
+/* ---------------- 游戏状态 ---------------- */
+const state = {
+  level: 1,          // 当前关卡
+  score: 0,          // 分数
+  cards: [],         // 全部卡片数据
+  slots: [],         // 槽位中的卡片（有序，按图案分组）
+  stash: [],         // 暂存区中的卡片
+  history: [],       // 撤销用的历史记录
+  propsUsed: {},     // 道具使用情况 { shuffle, undo, remove }
+  playing: false,    // 是否处于游戏中
+  S: 42,             // 卡片尺寸（px），布局时动态计算
+};
+
+/* ---------------- DOM 引用 ---------------- */
+const cardLayer = document.getElementById('card-layer');
+const boardEl   = document.getElementById('board');
+const boardWrap = document.getElementById('board-wrap');
+const slotsEl   = document.getElementById('slots');
+const stashEl   = document.getElementById('stash');
+const overlayEl = document.getElementById('overlay');
+
+/* ================================================================
+ *  工具函数
+ * ================================================================ */
+
+/** Fisher–Yates 洗牌 */
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/** 创建槽位与暂存区的空格子 */
+function buildCells() {
+  slotsEl.innerHTML = '';
+  for (let i = 0; i < SLOT_COUNT; i++) {
+    const d = document.createElement('div');
+    d.className = 'slot-cell';
+    slotsEl.appendChild(d);
+  }
+  stashEl.innerHTML = '';
+  for (let i = 0; i < STASH_COUNT; i++) {
+    const d = document.createElement('div');
+    d.className = 'stash-cell';
+    stashEl.appendChild(d);
+  }
+}
+
+/* ================================================================
+ *  关卡生成 —— 纯数据，不涉及 DOM
+ * ================================================================ */
+
+/**
+ * 生成一关的卡片数据
+ * 规则：
+ *   - 卡片总数是 3 的倍数
+ *   - 每种图案的数量也是 3 的倍数（保证一定能全部消完）
+ *   - 按层堆叠，每层有随机偏移，形成遮挡
+ */
+function generateLevel(level) {
+  /* --- 1. 计算卡片总数与层数 --- */
+  let total = 60 + (level - 1) * 18;   // 第一关 60 张，之后每关 +18
+  total = Math.min(total, 180);        // 上限，避免手机卡顿
+  total -= total % 3;                  // 确保是 3 的倍数
+
+  const layers = Math.min(3 + Math.floor((level - 1) / 2), 6); // 3 → 6 层
+
+  /* --- 2. 把卡片数平均分到各层 --- */
+  const perLayer = [];
+  let left = total;
+  for (let i = 0; i < layers; i++) {
+    const n = Math.min(Math.ceil(left / (layers - i)), GRID * GRID);
+    perLayer.push(n);
+    left -= n;
+  }
+
+  /* --- 3. 每层一个随机偏移（半格以内），制造层间错位遮挡 --- */
+  const layerOffsets = [];
+  for (let i = 0; i < layers; i++) {
+    layerOffsets.push([
+      (Math.random() - 0.5) * 0.6,  // 横向偏移 -0.3 ~ 0.3 格
+      (Math.random() - 0.5) * 0.6,  // 纵向偏移
+    ]);
+  }
+
+  /* --- 4. 为每层随机挑选网格落点 --- */
+  const allCells = [];
+  for (let x = 0; x < GRID; x++) {
+    for (let y = 0; y < GRID; y++) allCells.push([x, y]);
+  }
+
+  const positions = [];
+  for (let l = 0; l < layers; l++) {
+    const pool = shuffle(allCells.slice());
+    for (let i = 0; i < perLayer[l]; i++) {
+      const [gx, gy] = pool[i % pool.length];
+      positions.push({
+        layer: l,
+        gx, gy,
+        ox: layerOffsets[l][0],
+        oy: layerOffsets[l][1],
+      });
+    }
+  }
+
+  /* --- 5. 分配图案：以「三张一组」为单位分配，保证每种图案都是 3 的倍数 --- */
+  const totalCards = positions.length;
+  const triples = totalCards / 3;
+  const kinds = Math.max(3, Math.min(EMOJIS.length, Math.round(triples / 3.5)));
+
+  // 每种图案分到多少组（尽量平均）
+  const groups = new Array(kinds).fill(0);
+  for (let i = 0; i < triples; i++) groups[i % kinds]++;
+
+  const emojiList = [];
+  for (let i = 0; i < kinds; i++) {
+    for (let j = 0; j < groups[i] * 3; j++) emojiList.push(EMOJIS[i]);
+  }
+  shuffle(emojiList);
+
+  /* --- 6. 组装卡片数据 --- */
+  return positions.map((p, i) => ({
+    id: i,
+    emoji: emojiList[i],
+    layer: p.layer,
+    gx: p.gx,
+    gy: p.gy,
+    ox: p.ox,
+    oy: p.oy,
+    state: 'board',   // board | slot | stash | removed
+    blocked: false,
+    el: null,
+  }));
+}
+
+/* ================================================================
+ *  尺寸计算与布局
+ * ================================================================ */
+
+/** 根据可用空间计算卡片尺寸、棋盘尺寸、槽位格子尺寸 */
+function computeSizes() {
+  const wrapW = boardWrap.clientWidth - 12;
+  const wrapH = boardWrap.clientHeight - 12;
+
+  // 槽位宽度约束：7 个格子 + 6 个间隙 + 左右 padding
+  const slotAvail = Math.min(window.innerWidth - 32, 420);
+  const gap = 6;
+  const sFromSlot = Math.floor((slotAvail - gap * (SLOT_COUNT - 1) - 16) / SLOT_COUNT);
+
+  // 棋盘按 7.6 格宽度预留（给层偏移留出余量）
+  let S = Math.floor(Math.min(wrapW / 7.6, wrapH / 7.6, sFromSlot));
+  S = Math.max(24, Math.min(54, S));
+
+  state.S = S;
+
+  // 棋盘尺寸
+  boardEl.style.width = S * GRID + 'px';
+  boardEl.style.height = S * GRID + 'px';
+
+  // 槽位 / 暂存区格子尺寸
+  document.querySelectorAll('.slot-cell, .stash-cell').forEach(el => {
+    el.style.width = S + 'px';
+    el.style.height = S + 'px';
+  });
+
+  // 同步已有卡片尺寸
+  for (const card of state.cards) {
+    if (!card.el) continue;
+    card.el.style.width = S + 'px';
+    card.el.style.height = S + 'px';
+    card.el.style.fontSize = Math.round(S * 0.56) + 'px';
+  }
+}
+
+/**
+ * 重新计算所有卡片的位置并应用
+ * @param {boolean} instant 是否禁用过渡（用于首次布局）
+ */
+function positionAll(instant = false) {
+  const S = state.S;
+  const br = boardEl.getBoundingClientRect();
+
+  // 槽位 / 暂存区各格子的屏幕坐标
+  const slotRects  = [...document.querySelectorAll('.slot-cell')].map(el => el.getBoundingClientRect());
+  const stashRects = [...document.querySelectorAll('.stash-cell')].map(el => el.getBoundingClientRect());
+
+  if (instant) {
+    for (const c of state.cards) if (c.el) c.el.style.transition = 'none';
+  }
+
+  for (const card of state.cards) {
+    if (card.state === 'removed' || !card.el) continue;
+    const el = card.el;
+
+    let x = 0, y = 0, z = 0;
+
+    if (card.state === 'board') {
+      // 棋盘上的卡片：网格坐标 + 层偏移
+      x = br.left + card.gx * S + card.ox * S;
+      y = br.top  + card.gy * S + card.oy * S;
+      z = 10 + card.layer * 10;
+
+    } else if (card.state === 'slot') {
+      // 槽位中的卡片：按它在数组中的位置对齐格子
+      const i = state.slots.indexOf(card);
+      const r = slotRects[i];
+      if (r) { x = r.left; y = r.top; }
+      z = 600 + i;
+
+    } else if (card.state === 'stash') {
+      const i = state.stash.indexOf(card);
+      const r = stashRects[i];
+      if (r) { x = r.left; y = r.top; }
+      z = 500 + i;
+    }
+
+    el.style.transform = `translate(${x}px, ${y}px)`;
+    el.style.zIndex = z;
+  }
+
+  if (instant) {
+    requestAnimationFrame(() => {
+      for (const c of state.cards) if (c.el) c.el.style.transition = '';
+    });
+  }
+}
+
+/* ================================================================
+ *  遮挡判定
+ * ================================================================ */
+
+/**
+ * 判断某张卡片是否被上层卡片遮挡
+ * 原理：与所有层数更高的卡片做矩形重叠面积比较
+ */
+function isCardBlocked(card, boardCards) {
+  for (const other of boardCards) {
+    if (other === card) continue;
+    if (other.layer <= card.layer) continue; // 只看更高层
+
+    // 用「格」为单位计算矩形（含层偏移）
+    const ax = card.gx + card.ox,  ay = card.gy + card.oy;
+    const bx = other.gx + other.ox, by = other.gy + other.oy;
+
+    const dx = Math.min(ax + 1, bx + 1) - Math.max(ax, bx);
+    const dy = Math.min(ay + 1, by + 1) - Math.max(ay, by);
+
+    if (dx > 0 && dy > 0 && dx * dy > OVERLAP_THRESHOLD) return true;
+  }
+  return false;
+}
+
+/** 刷新所有棋盘卡片的遮挡状态 */
+function updateBlocked() {
+  const boardCards = state.cards.filter(c => c.state === 'board');
+  for (const card of boardCards) {
+    const blocked = isCardBlocked(card, boardCards);
+    card.blocked = blocked;
+    if (card.el) card.el.classList.toggle('blocked', blocked);
+  }
+}
+
+/* ================================================================
+ *  槽位逻辑
+ * ================================================================ */
+
+/** 把卡片插入槽位（相同图案自动挨在一起） */
+function insertIntoSlot(card) {
+  let idx = -1;
+  for (let i = state.slots.length - 1; i >= 0; i--) {
+    if (state.slots[i].emoji === card.emoji) { idx = i; break; }
+  }
+  if (idx === -1) state.slots.push(card);
+  else state.slots.splice(idx + 1, 0, card);
+}
+
+let resolveTimer = null;
+
+/** 延迟触发结算（等飞行动画播完） */
+function scheduleResolve() {
+  clearTimeout(resolveTimer);
+  resolveTimer = setTimeout(() => {
+    resolveTimer = null;
+    resolveSlots();
+  }, FLY_DURATION);
+}
+
+/** 检查槽位中是否有 3 张相同图案 */
+function resolveSlots() {
+  if (!state.playing && state.cards.length === 0) return;
+
+  // 统计
+  const count = {};
+  for (const c of state.slots) count[c.emoji] = (count[c.emoji] || 0) + 1;
+
+  let target = null;
+  for (const e in count) {
+    if (count[e] >= 3) { target = e; break; }
+  }
+
+  if (target) {
+    // ---- 找出 3 张相同卡片 ----
+    const matched = [];
+    for (const c of state.slots) {
+      if (c.emoji === target && matched.length < 3) matched.push(c);
+    }
+    state.slots = state.slots.filter(c => !matched.includes(c));
+
+    // ---- 消除动画 ----
+    for (const c of matched) {
+      c.state = 'removed';
+      c.el.style.transform += ' scale(0.15)';
+      c.el.style.opacity = '0';
+      c.el.style.pointerEvents = 'none';
+    }
+
+    // ---- 计分 + 飘字 ----
+    state.score += 30;
+    const sr = slotsEl.getBoundingClientRect();
+    showFloat('+30', sr.left + sr.width / 2, sr.top - 6);
+
+    updateHUD();
+
+    // ---- 动画结束后清理 DOM 并递归检查 ----
+    setTimeout(() => {
+      matched.forEach(c => { c.el.remove(); c.el = null; });
+      positionAll();
+      updateHUD();
+      afterResolve();
+      // 递归：理论上不会有第二组，但保险起见
+      if (state.slots.length >= 3) resolveSlots();
+    }, 300);
+
+  } else {
+    afterResolve();
+  }
+}
+
+/** 结算后的胜负判断 */
+function afterResolve() {
+  if (!state.playing) return;
+
+  const remaining = state.cards.filter(c => c.state !== 'removed').length;
+  if (remaining === 0) {
+    winLevel();
+    return;
+  }
+  if (state.slots.length >= SLOT_COUNT) {
+    loseLevel();
+  }
+}
+
+/* ================================================================
+ *  飘分文字
+ * ================================================================ */
+function showFloat(text, x, y) {
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.textContent = text;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+
+/* ================================================================
+ *  HUD 与道具按钮状态
+ * ================================================================ */
+function updateHUD() {
+  document.getElementById('level-val').textContent = state.level;
+  document.getElementById('remain-val').textContent =
+    state.cards.filter(c => c.state !== 'removed').length;
+  document.getElementById('score-val').textContent = state.score;
+}
+
+function updateProps() {
+  document.querySelectorAll('.prop-btn').forEach(btn => {
+    const key = btn.dataset.prop;
+    btn.disabled = !state.playing || !!state.propsUsed[key];
+  });
+}
+
+/* ================================================================
+ *  卡片交互
+ * ================================================================ */
+
+/** 统一的卡片点击入口 */
+function onCardClick(card) {
+  if (!state.playing) return;
+
+  if (card.state === 'board') {
+    handleBoardCardClick(card);
+  } else if (card.state === 'stash') {
+    handleStashCardClick(card);
+  }
+}
+
+/** 点击棋盘上的卡片 */
+function handleBoardCardClick(card) {
+  // 被遮挡 → 抖一下表示不能点
+  if (card.blocked) {
+    card.el.classList.remove('shake');
+    void card.el.offsetWidth; // 触发重排以重启动画
+    card.el.classList.add('shake');
+    setTimeout(() => card.el.classList.remove('shake'), 260);
+    return;
+  }
+
+  // 槽位已满 → 忽略
+  if (state.slots.length >= SLOT_COUNT) return;
+
+  // 记录历史（用于撤销）
+  state.history.push({
+    card,
+    gx: card.gx, gy: card.gy,
+    ox: card.ox, oy: card.oy,
+    layer: card.layer,
+  });
+
+  // 点按缩放反馈
+  const face = card.el.querySelector('.face');
+  if (face) {
+    face.style.transform = 'scale(1.3)';
+    setTimeout(() => { if (face) face.style.transform = ''; }, 150);
+  }
+
+  // 移入槽位
+  card.state = 'slot';
+  insertIntoSlot(card);
+
+  updateBlocked();
+  positionAll();
+  updateHUD();
+
+  scheduleResolve();
+}
+
+/** 点击暂存区的卡片：有空间则放回槽位 */
+function handleStashCardClick(card) {
+  if (state.slots.length >= SLOT_COUNT) return;
+
+  const i = state.stash.indexOf(card);
+  if (i === -1) return;
+  state.stash.splice(i, 1);
+
+  card.state = 'slot';
+  insertIntoSlot(card);
+
+  if (state.stash.length === 0) {
+    stashEl.classList.add('hidden');
+    // 布局变化后重新计算尺寸
+    requestAnimationFrame(() => {
+      computeSizes();
+      positionAll();
+    });
+  }
+
+  updateBlocked();
+  positionAll();
+  updateHUD();
+  scheduleResolve();
+}
+
+/* ================================================================
+ *  道具系统
+ * ================================================================ */
+
+/** 洗牌：重新随机分配场上剩余卡片的图案（位置不变） */
+function useShuffle() {
+  if (!state.playing || state.propsUsed.shuffle) return;
+
+  const boardCards = state.cards.filter(c => c.state === 'board');
+  if (boardCards.length < 2) return;
+
+  state.propsUsed.shuffle = true;
+
+  const emojis = boardCards.map(c => c.emoji);
+  shuffle(emojis);
+
+  boardCards.forEach((c, i) => {
+    c.emoji = emojis[i];
+    const face = c.el.querySelector('.face');
+    if (face) face.textContent = emojis[i];
+    // 闪一下，给玩家反馈
+    c.el.style.transform += ' scale(0.85)';
+    setTimeout(() => {
+      c.el.style.transform = c.el.style.transform.replace(' scale(0.85)', '');
+    }, 150);
+  });
+
+  // 洗牌后清空历史，避免撤销出问题
+  state.history = state.history.filter(h => h.card.state === 'board');
+
+  updateProps();
+  updateBlocked();
+}
+
+/** 撤销：把槽位里最后一张卡片退回它原来的位置 */
+function useUndo() {
+  if (!state.playing || state.propsUsed.undo) return;
+  if (state.slots.length === 0) return;
+
+  // 从历史中找最近一张仍在槽位里的卡片
+  let rec = null;
+  while (state.history.length) {
+    const r = state.history[state.history.length - 1];
+    if (state.slots.includes(r.card)) { rec = state.history.pop(); break; }
+    state.history.pop(); // 已经不在槽位了，丢弃这条记录
+  }
+  if (!rec) return;
+
+  state.propsUsed.undo = true;
+
+  const card = rec.card;
+  const idx = state.slots.indexOf(card);
+  if (idx !== -1) state.slots.splice(idx, 1);
+
+  // 恢复卡片到棋盘
+  card.state = 'board';
+  card.gx = rec.gx;
+  card.gy = rec.gy;
+  card.ox = rec.ox;
+  card.oy = rec.oy;
+  card.layer = rec.layer;
+
+  updateBlocked();
+  positionAll();
+  updateHUD();
+  updateProps();
+}
+
+/** 移出：把槽位最左边的 3 张卡片移到暂存区 */
+function useRemove() {
+  if (!state.playing || state.propsUsed.remove) return;
+  if (state.slots.length === 0) return;
+
+  state.propsUsed.remove = true;
+
+  const moving = state.slots.splice(0, Math.min(3, state.slots.length));
+  moving.forEach(c => {
+    c.state = 'stash';
+    state.stash.push(c);
+  });
+
+  stashEl.classList.remove('hidden');
+
+  // 让浏览器先完成布局，再计算位置
+  requestAnimationFrame(() => {
+    computeSizes();
+    positionAll();
+  });
+
+  updateBlocked();
+  updateHUD();
+  updateProps();
+}
+
+/* ================================================================
+ *  胜负与遮罩层
+ * ================================================================ */
+
+/** 显示遮罩层 */
+function showOverlay({ emoji, title, desc, btnText, onClick }) {
+  document.getElementById('ov-emoji').textContent = emoji;
+  document.getElementById('ov-title').textContent = title;
+  document.getElementById('ov-desc').textContent = desc;
+  const btn = document.getElementById('ov-btn');
+  btn.textContent = btnText;
+  // 替换按钮（清除旧监听）
+  const fresh = btn.cloneNode(true);
+  btn.parentNode.replaceChild(fresh, btn);
+  fresh.addEventListener('click', onClick);
+  overlayEl.classList.remove('hidden');
+}
+
+function hideOverlay() {
+  overlayEl.classList.add('hidden');
+}
+
+/** 过关 */
+function winLevel() {
+  state.playing = false;
+  updateProps();
+  setTimeout(() => {
+    showOverlay({
+      emoji: '🎉',
+      title: `第 ${state.level} 关通关！`,
+      desc: `当前总分：${state.score} 分\n下一关卡片会更多哦～`,
+      btnText: '下一关',
+      onClick: () => { hideOverlay(); startLevel(state.level + 1); },
+    });
+  }, 260);
+}
+
+/** 失败 */
+function loseLevel() {
+  state.playing = false;
+  updateProps();
+  setTimeout(() => {
+    showOverlay({
+      emoji: '😵',
+      title: '槽位满了…',
+      desc: `本局得分：${state.score} 分\n再试一次吧！`,
+      btnText: '再来一局',
+      onClick: () => { hideOverlay(); startLevel(state.level); },
+    });
+  }, 260);
+}
+
+/* ================================================================
+ *  关卡启动
+ * ================================================================ */
+function startLevel(level) {
+  /* --- 1. 重置状态 --- */
+  state.level = level;
+  state.slots = [];
+  state.stash = [];
+  state.history = [];
+  state.propsUsed = { shuffle: false, undo: false, remove: false };
+  state.playing = false;
+
+  if (level === 1) state.score = 0;
+
+  cardLayer.innerHTML = '';
+  stashEl.classList.add('hidden');
+  clearTimeout(resolveTimer);
+
+  /* --- 2. 生成关卡数据 --- */
+  state.cards = generateLevel(level);
+
+  /* --- 3. 计算尺寸 --- */
+  computeSizes();
+
+  /* --- 4. 创建卡片 DOM --- */
+  for (const card of state.cards) {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.style.width = state.S + 'px';
+    el.style.height = state.S + 'px';
+    el.style.fontSize = Math.round(state.S * 0.56) + 'px';
+    el.style.opacity = '0';
+    el.innerHTML = `<span class="face">${card.emoji}</span>`;
+    el.addEventListener('click', () => onCardClick(card));
+    card.el = el;
+    cardLayer.appendChild(el);
+  }
+
+  /* --- 5. 初始布局与状态刷新 --- */
+  state.playing = true;
+
+  updateBlocked();
+  positionAll(true);
+  updateHUD();
+  updateProps();
+
+  // 淡入
+  requestAnimationFrame(() => {
+    state.cards.forEach(c => { if (c.el) c.el.style.opacity = '1'; });
+  });
+}
+
+/* ================================================================
+ *  全局事件绑定
+ * ================================================================ */
+
+// 道具按钮
+document.querySelectorAll('.prop-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.prop;
+    if (key === 'shuffle') useShuffle();
+    else if (key === 'undo') useUndo();
+    else if (key === 'remove') useRemove();
+  });
+});
+
+// 窗口尺寸变化
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    computeSizes();
+    positionAll(true);
+  }, 120);
+});
+
+// 防止移动端双击缩放
+document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+
+/* ================================================================
+ *  初始化
+ * ================================================================ */
+(function init() {
+  buildCells();
+  computeSizes();
+
+  showOverlay({
+    emoji: '🐑',
+    title: '羊了个羊',
+    desc: '点击未被遮挡的卡片放进下方槽位\n凑齐 3 张相同图案即可消除\n槽位满 7 张就输啦～',
+    btnText: '开始游戏',
+    onClick: () => {
+      hideOverlay();
+      startLevel(1);
+    },
+  });
+})();
+</script>
+</body>
+</html>
