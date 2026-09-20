@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>羊了个羊 · 消消乐</title>
+<title>羊了个羊 · 救援记</title>
 <style>
 /* ============================================================
    全局样式 —— 自然清新配色：米白 / 浅绿 / 木色
@@ -28,9 +28,27 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
                "Microsoft YaHei", "Helvetica Neue", sans-serif;
   color: #4a4033;
-  background: linear-gradient(165deg, #fdfaf3 0%, #f3f7ec 55%, #eef3e2 100%);
+  background: var(--bg);
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* ---------- 章节主题：背景 + 主题色（随关卡切换） ---------- */
+body[data-chapter="1"] {
+  --bg: linear-gradient(165deg, #fdfaf3 0%, #f3f7ec 55%, #eef3e2 100%);
+  --accent: #5f8a4c; --accent-2: #82bd6c; --accent-deep: #6a9c56;
+}
+body[data-chapter="2"] {
+  --bg: linear-gradient(165deg, #f2f6ee 0%, #e2ecdf 50%, #d3e3d6 100%);
+  --accent: #4c8a63; --accent-2: #6fae86; --accent-deep: #437a56;
+}
+body[data-chapter="3"] {
+  --bg: linear-gradient(165deg, #f8fbff 0%, #eaf3fb 55%, #dcebf7 100%);
+  --accent: #4f83a8; --accent-2: #74add0; --accent-deep: #3f6f92;
+}
+body[data-chapter="4"] {
+  --bg: linear-gradient(165deg, #f5f2fb 0%, #eae5f6 55%, #dcd5f0 100%);
+  --accent: #7a6cc4; --accent-2: #9c90dd; --accent-deep: #6356a8;
 }
 
 /* ---------- 顶部信息栏 ---------- */
@@ -60,7 +78,7 @@ body {
 .hud-item b {
   font-size: 18px;
   font-weight: 800;
-  color: #5f8a4c;
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
@@ -145,8 +163,8 @@ body {
   font-weight: 700;
   font-family: inherit;
   color: #fff;
-  background: linear-gradient(180deg, #a6d494 0%, #82bd6c 100%);
-  box-shadow: 0 3px 0 #6a9c56, 0 5px 14px rgba(120, 170, 100, 0.32);
+  background: linear-gradient(180deg, var(--accent-2) 0%, var(--accent) 100%);
+  box-shadow: 0 3px 0 var(--accent-deep), 0 5px 14px rgba(120, 170, 100, 0.32);
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease,
               background 0.2s ease, color 0.2s ease;
@@ -154,7 +172,7 @@ body {
 
 .prop-btn:active:not(:disabled) {
   transform: translateY(3px);
-  box-shadow: 0 0 0 #6a9c56;
+  box-shadow: 0 0 0 var(--accent-deep);
 }
 
 .prop-btn:disabled {
@@ -242,6 +260,60 @@ body {
   100% { opacity: 0; transform: translate(-50%, -200%) scale(1); }
 }
 
+/* ---------- 连击提示（槽位上方，带倒计时条） ---------- */
+#combo-badge {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  z-index: 300;
+  padding: 7px 18px 9px;
+  border-radius: 999px;
+  background: rgba(62, 52, 40, 0.78);
+  color: #ffd76a;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(60, 48, 30, 0.3);
+}
+
+#combo-badge b {
+  font-weight: 800;
+}
+
+#combo-badge .combo-bar {
+  display: block;
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: #ffd76a;
+  width: 100%;
+}
+
+#combo-badge.hidden { display: none; }
+
+/* ---------- 遮罩层次要按钮（继续 / 从头开始） ---------- */
+.ghost-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1.5px solid #d8d0bd;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #9c907c;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ghost-btn:active { background: #f1ecdf; }
+
+#ov-btn2.hidden { display: none; }
+
 /* ---------- 遮罩层（开始 / 胜利 / 失败） ---------- */
 #overlay {
   position: fixed;
@@ -289,7 +361,7 @@ body {
 .overlay-card h2 {
   margin: 0 0 10px;
   font-size: 23px;
-  color: #5f8a4c;
+  color: var(--accent);
   letter-spacing: 1px;
 }
 
@@ -311,30 +383,32 @@ body {
   font-weight: 800;
   letter-spacing: 2px;
   color: #fff;
-  background: linear-gradient(180deg, #a2d390 0%, #7cba67 100%);
-  box-shadow: 0 4px 0 #649a52, 0 8px 22px rgba(120, 170, 100, 0.38);
+  background: linear-gradient(180deg, var(--accent-2) 0%, var(--accent) 100%);
+  box-shadow: 0 4px 0 var(--accent-deep), 0 8px 22px rgba(120, 170, 100, 0.38);
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .main-btn:active {
   transform: translateY(3px);
-  box-shadow: 0 1px 0 #649a52;
+  box-shadow: 0 1px 0 var(--accent-deep);
 }
 </style>
 </head>
-<body>
+<body data-chapter="1">
 
 <!-- ==================== 顶部信息栏 ==================== -->
 <header id="hud">
   <div class="hud-item"><span>关卡</span><b id="level-val">1</b></div>
   <div class="hud-item"><span>剩余</span><b id="remain-val">0</b></div>
   <div class="hud-item"><span>分数</span><b id="score-val">0</b></div>
+  <div class="hud-item"><span>最高分</span><b id="best-val">0</b></div>
 </header>
 
 <!-- ==================== 卡片堆叠区 ==================== -->
 <main id="board-wrap">
   <div id="board"></div>
+  <div id="combo-badge" class="hidden"><b id="combo-txt">连击 ×2</b><span class="combo-bar"></span></div>
 </main>
 
 <!-- ==================== 底部：槽位 / 暂存区 / 道具 ==================== -->
@@ -360,27 +434,67 @@ body {
     <h2 id="ov-title">羊了个羊</h2>
     <p id="ov-desc"></p>
     <button id="ov-btn" class="main-btn">开始游戏</button>
+    <button id="ov-btn2" class="ghost-btn hidden">从头开始</button>
   </div>
 </div>
 
 <script>
 /* ================================================================
- *  羊了个羊 · 消消乐
+ *  羊了个羊 · 救援记
  *  ----------------------------------------------------------------
  *  架构说明：
  *    1. 数据层：state.cards 保存所有卡片的逻辑数据（图案、坐标、状态）
  *    2. 渲染层：每个卡片对应一个 DOM 元素，统一放在 #card-layer 中，
  *               用 transform: translate() 定位，方便做飞行动画
  *    3. 逻辑层：遮挡判定 / 槽位三消 / 道具 / 胜负判断
+ *    4. 元游戏：章节地图（每 5 关一章，图案与配色随之切换）/
+ *               连击计分（5 秒内连续消除，分数翻倍封顶 8 倍）/
+ *               localStorage 存档（解锁进度 + 最高分）
  * ================================================================ */
 
+/* ---------------- 章节配置 ----------------
+   每 5 关一个章节，各有专属图案池与配色；
+   走完 4 章后主题循环，难度仍随关卡数增长 */
+const LEVELS_PER_CHAPTER = 5;
+
+const CHAPTERS = [
+  {
+    name: '青青草原',
+    intro: '故事开始的地方。\n狼群刚刚离去，草堆下还藏着第一批小羊。',
+    emojis: ['🐑', '🌿', '🥕', '🍎', '🌻', '🪵', '🧶', '🍄'],
+  },
+  {
+    name: '迷雾森林',
+    intro: '羊群逃进了迷雾森林，\n藤蔓和蘑菇盖住了它们的踪迹……',
+    emojis: ['🐑', '🌲', '🍄', '🌰', '🍓', '🐿️', '🪵', '🦔'],
+  },
+  {
+    name: '雪山之巅',
+    intro: '风雪越来越大了，\n小羊们挤在一起取暖。快找到它们！',
+    emojis: ['🐑', '❄️', '⛄', '🧣', '🧤', '🏔️', '☕', '🌲'],
+  },
+  {
+    name: '月光山谷',
+    intro: '月亮升起来了。\n听说狼王就住在这片山谷——小心！',
+    emojis: ['🐑', '🌙', '⭐', '🦉', '🍇', '🕯️', '🔮', '💐'],
+  },
+];
+
+/** 关卡所属章节（主题按 4 章循环，num 一直递增） */
+function chapterOf(level) {
+  const idx = Math.floor((level - 1) / LEVELS_PER_CHAPTER) % CHAPTERS.length;
+  const num = Math.floor((level - 1) / LEVELS_PER_CHAPTER) + 1;
+  return { ...CHAPTERS[idx], index: idx + 1, num };
+}
+
 /* ---------------- 常量配置 ---------------- */
-const EMOJIS = ['🐑', '🌿', '🥕', '🍎', '🌻', '🪵', '🧶', '🍄']; // 图案池
 const GRID = 7;                 // 棋盘网格边长（每层 7×7 个落点）
 const SLOT_COUNT = 7;           // 槽位数量
 const STASH_COUNT = 3;          // 暂存区数量
 const OVERLAP_THRESHOLD = 0.06; // 遮挡判定阈值（重叠面积 / 单卡面积）
 const FLY_DURATION = 340;       // 飞入槽位的动画时长（ms）
+const COMBO_WINDOW = 5000;      // 连击有效窗口（ms），窗口内连续消除分数翻倍
+const SAVE_KEY = 'sheep_rescue_save_v1';  // localStorage 存档键
 
 /* ---------------- 游戏状态 ---------------- */
 const state = {
@@ -394,6 +508,12 @@ const state = {
   playing: false,    // 是否处于游戏中
   S: 42,             // 卡片尺寸（px），布局时动态计算
 };
+
+/* ---------------- 存档与连击 ---------------- */
+let save = { unlocked: 1, best: 0 };  // 本地存档：已解锁关卡 / 最高分
+let combo = 0;                        // 当前连击数
+let lastMatchAt = 0;                  // 上一次消除的时间戳
+let comboTimer = null;                // 连击提示条的隐藏计时器
 
 /* ---------------- DOM 引用 ---------------- */
 const cardLayer = document.getElementById('card-layer');
@@ -414,6 +534,24 @@ function shuffle(arr) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
+}
+
+/** 读取本地存档（隐私模式等场景下静默降级为不存档） */
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      save.unlocked = Math.max(1, d.unlocked | 0);
+      save.best = Math.max(0, d.best | 0);
+    }
+  } catch (e) { /* 存档不可用时忽略，不影响游戏 */ }
+  return save;
+}
+
+/** 写入本地存档 */
+function writeSave() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {}
 }
 
 /** 创建槽位与暂存区的空格子 */
@@ -444,6 +582,8 @@ function buildCells() {
  *   - 按层堆叠，每层有随机偏移，形成遮挡
  */
 function generateLevel(level) {
+  const pool = chapterOf(level).emojis;  // 本章节的图案池
+
   /* --- 1. 计算卡片总数与层数 --- */
   let total = 60 + (level - 1) * 18;   // 第一关 60 张，之后每关 +18
   total = Math.min(total, 180);        // 上限，避免手机卡顿
@@ -492,7 +632,7 @@ function generateLevel(level) {
   /* --- 5. 分配图案：以「三张一组」为单位分配，保证每种图案都是 3 的倍数 --- */
   const totalCards = positions.length;
   const triples = totalCards / 3;
-  const kinds = Math.max(3, Math.min(EMOJIS.length, Math.round(triples / 3.5)));
+  const kinds = Math.max(3, Math.min(pool.length, Math.round(triples / 3.5)));
 
   // 每种图案分到多少组（尽量平均）
   const groups = new Array(kinds).fill(0);
@@ -500,7 +640,7 @@ function generateLevel(level) {
 
   const emojiList = [];
   for (let i = 0; i < kinds; i++) {
-    for (let j = 0; j < groups[i] * 3; j++) emojiList.push(EMOJIS[i]);
+    for (let j = 0; j < groups[i] * 3; j++) emojiList.push(pool[i]);
   }
   shuffle(emojiList);
 
@@ -700,10 +840,25 @@ function resolveSlots() {
       c.el.style.pointerEvents = 'none';
     }
 
-    // ---- 计分 + 飘字 ----
-    state.score += 30;
+    // ---- 连击判定 + 计分 ----
+    const now = Date.now();
+    combo = (now - lastMatchAt <= COMBO_WINDOW) ? combo + 1 : 1;
+    lastMatchAt = now;
+
+    // 连击倍率：1 / 2 / 4 / 8 倍封顶（+30 / +60 / +120 / +240）
+    const points = 30 * Math.pow(2, Math.min(combo - 1, 3));
+    state.score += points;
+
+    // 分数实时计入存档（中途退出也不丢最高分）
+    if (state.score > save.best) {
+      save.best = state.score;
+      writeSave();
+    }
+
     const sr = slotsEl.getBoundingClientRect();
-    showFloat('+30', sr.left + sr.width / 2, sr.top - 6);
+    showFloat(combo > 1 ? `+${points} 连击×${combo}` : `+${points}`,
+              sr.left + sr.width / 2, sr.top - 6);
+    if (combo > 1) showComboBadge(combo);
 
     updateHUD();
 
@@ -750,6 +905,29 @@ function showFloat(text, x, y) {
 }
 
 /* ================================================================
+ *  连击提示条（显示倍率 + 剩余时间）
+ * ================================================================ */
+function showComboBadge(n) {
+  const badge = document.getElementById('combo-badge');
+  const txt = document.getElementById('combo-txt');
+  const bar = badge.querySelector('.combo-bar');
+
+  txt.textContent = `连击 ×${n}`;
+  badge.classList.remove('hidden');
+
+  // 倒计时条：从满到空表示连击剩余时间
+  bar.style.transition = 'none';
+  bar.style.width = '100%';
+  requestAnimationFrame(() => {
+    bar.style.transition = `width ${COMBO_WINDOW}ms linear`;
+    bar.style.width = '0%';
+  });
+
+  clearTimeout(comboTimer);
+  comboTimer = setTimeout(() => badge.classList.add('hidden'), COMBO_WINDOW);
+}
+
+/* ================================================================
  *  HUD 与道具按钮状态
  * ================================================================ */
 function updateHUD() {
@@ -757,6 +935,7 @@ function updateHUD() {
   document.getElementById('remain-val').textContent =
     state.cards.filter(c => c.state !== 'removed').length;
   document.getElementById('score-val').textContent = state.score;
+  document.getElementById('best-val').textContent = save.best;
 }
 
 function updateProps() {
@@ -773,6 +952,8 @@ function updateProps() {
 /** 统一的卡片点击入口 */
 function onCardClick(card) {
   if (!state.playing) return;
+  // 弹窗刚关闭的 250ms 内忽略：防止连点按钮时误选卡片
+  if (Date.now() - overlayHiddenAt < 250) return;
 
   if (card.state === 'board') {
     handleBoardCardClick(card);
@@ -945,17 +1126,40 @@ function useRemove() {
  *  胜负与遮罩层
  * ================================================================ */
 
-/** 显示遮罩层 */
-function showOverlay({ emoji, title, desc, btnText, onClick }) {
+/** 显示遮罩层（btn2Text / onClick2 可选，用于「继续 / 从头开始」双按钮） */
+let overlayShownAt = 0;   // 弹窗出现时间，用于双击防误触
+let overlayHiddenAt = 0;  // 弹窗关闭时间，防止双击误点到底部卡片
+
+function showOverlay({ emoji, title, desc, btnText, onClick, btn2Text, onClick2 }) {
   document.getElementById('ov-emoji').textContent = emoji;
   document.getElementById('ov-title').textContent = title;
   document.getElementById('ov-desc').textContent = desc;
+
   const btn = document.getElementById('ov-btn');
   btn.textContent = btnText;
   // 替换按钮（清除旧监听）
   const fresh = btn.cloneNode(true);
   btn.parentNode.replaceChild(fresh, btn);
-  fresh.addEventListener('click', onClick);
+  // 弹窗刚出现的 300ms 内忽略点击：防止双击穿过弹窗（如跳过章节剧情）
+  const guard = fn => () => {
+    if (Date.now() - overlayShownAt < 300) return;
+    overlayHiddenAt = Date.now();
+    fn();
+  };
+  fresh.addEventListener('click', guard(onClick));
+
+  const btn2 = document.getElementById('ov-btn2');
+  const fresh2 = btn2.cloneNode(true);
+  btn2.parentNode.replaceChild(fresh2, btn2);
+  if (btn2Text) {
+    fresh2.textContent = btn2Text;
+    fresh2.addEventListener('click', guard(onClick2));
+    fresh2.classList.remove('hidden');
+  } else {
+    fresh2.classList.add('hidden');
+  }
+
+  overlayShownAt = Date.now();
   overlayEl.classList.remove('hidden');
 }
 
@@ -967,15 +1171,42 @@ function hideOverlay() {
 function winLevel() {
   state.playing = false;
   updateProps();
+
+  // 解锁下一关并写存档
+  save.unlocked = Math.max(save.unlocked, state.level + 1);
+  save.best = Math.max(save.best, state.score);
+  writeSave();
+
+  const cur = chapterOf(state.level);
+  const next = chapterOf(state.level + 1);
+  const isNewChapter = next.num !== cur.num;
+
   setTimeout(() => {
     showOverlay({
       emoji: '🎉',
       title: `第 ${state.level} 关通关！`,
-      desc: `当前总分：${state.score} 分\n下一关卡片会更多哦～`,
-      btnText: '下一关',
-      onClick: () => { hideOverlay(); startLevel(state.level + 1); },
+      desc: (isNewChapter ? `狼群带着剩余的小羊往${next.name}逃去了……\n` : '') +
+            `当前总分：${state.score} 分\n下一关卡片会更多哦～`,
+      btnText: isNewChapter ? `追去第 ${next.num} 章 · ${next.name}` : '下一关',
+      onClick: () => {
+        hideOverlay();
+        if (isNewChapter) showChapterIntro(next, state.level + 1);
+        else startLevel(state.level + 1);
+      },
     });
   }, 260);
+}
+
+/** 章节开场的剧情过场 */
+function showChapterIntro(ch, level) {
+  const emoji = ['🌾', '🌲', '🏔️', '🌙'][ch.index - 1];
+  showOverlay({
+    emoji,
+    title: `第 ${ch.num} 章 · ${ch.name}`,
+    desc: ch.intro,
+    btnText: '开始营救',
+    onClick: () => { hideOverlay(); startLevel(level); },
+  });
 }
 
 /** 失败 */
@@ -986,7 +1217,7 @@ function loseLevel() {
     showOverlay({
       emoji: '😵',
       title: '槽位满了…',
-      desc: `本局得分：${state.score} 分\n再试一次吧！`,
+      desc: `本局得分：${state.score} 分\n还有小羊被困在草堆里，再试一次吧！`,
       btnText: '再来一局',
       onClick: () => { hideOverlay(); startLevel(state.level); },
     });
@@ -1006,6 +1237,14 @@ function startLevel(level) {
   state.playing = false;
 
   if (level === 1) state.score = 0;
+
+  // 章节主题与连击重置
+  const ch = chapterOf(level);
+  document.body.dataset.chapter = String(ch.index);
+  combo = 0;
+  lastMatchAt = 0;
+  clearTimeout(comboTimer);
+  document.getElementById('combo-badge').classList.add('hidden');
 
   cardLayer.innerHTML = '';
   stashEl.classList.add('hidden');
@@ -1078,17 +1317,31 @@ document.addEventListener('dblclick', e => e.preventDefault(), { passive: false 
 (function init() {
   buildCells();
   computeSizes();
+  loadSave();
+  updateHUD();
 
-  showOverlay({
-    emoji: '🐑',
-    title: '羊了个羊',
-    desc: '点击未被遮挡的卡片放进下方槽位\n凑齐 3 张相同图案即可消除\n槽位满 7 张就输啦～',
-    btnText: '开始游戏',
-    onClick: () => {
-      hideOverlay();
-      startLevel(1);
-    },
-  });
+  // 开场剧情：老玩家可以直接继续，新手从第一关开始
+  const STORY = '深夜，大灰狼闯进羊村，把羊群冲散在草堆里。\n你是牧场的小小牧羊人——\n点击未被遮挡的卡片放进下方槽位，\n凑齐 3 张相同图案就能救出小羊。\n槽位满 7 张就失败啦～';
+
+  if (save.unlocked > 1) {
+    showOverlay({
+      emoji: '🐑',
+      title: '羊了个羊 · 救援记',
+      desc: `${STORY}\n\n欢迎回来！已解锁第 ${save.unlocked} 关，最高分 ${save.best}。`,
+      btnText: `继续营救（第 ${save.unlocked} 关）`,
+      onClick: () => { hideOverlay(); startLevel(save.unlocked); },
+      btn2Text: '从头开始',
+      onClick2: () => { hideOverlay(); startLevel(1); },
+    });
+  } else {
+    showOverlay({
+      emoji: '🐑',
+      title: '羊了个羊 · 救援记',
+      desc: STORY,
+      btnText: '开始营救',
+      onClick: () => { hideOverlay(); startLevel(1); },
+    });
+  }
 })();
 </script>
 </body>
