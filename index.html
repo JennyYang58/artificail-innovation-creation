@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>羊了个羊 · 救援记</title>
+<title>羊了个羊 · 拾荒远征</title>
 <style>
 /* ============================================================
    全局样式 —— 自然清新配色：米白 / 浅绿 / 木色
@@ -57,7 +57,7 @@ body[data-chapter="4"] {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 10px 16px 12px;
+  padding: 8px 16px 6px;
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -80,6 +80,36 @@ body[data-chapter="4"] {
   font-weight: 800;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 资源条（仓库 / 金币 / 声望 / 增益） ---------- */
+#resbar {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: #9c907c;
+  background: rgba(255, 255, 255, 0.55);
+  border-bottom: 1px solid #eee7d8;
+}
+
+#resbar b {
+  font-weight: 800;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.buff-chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(95, 138, 76, 0.14);
+  color: #6d7f5e;
+  font-size: 11px;
 }
 
 /* ---------- 棋盘区 ---------- */
@@ -231,7 +261,11 @@ body[data-chapter="4"] {
   border-radius: 11px;
   background: rgba(92, 80, 62, 0.46);
   pointer-events: none;
+  transition: opacity 0.4s ease;
 }
+
+/* 透视效果：遮挡层几乎透明，可看清底牌 */
+body.peeking .card.blocked::after { opacity: 0.06; }
 
 /* 点击时的抖动反馈（用于不能点的卡片） */
 @keyframes shakeX {
@@ -245,18 +279,25 @@ body[data-chapter="4"] {
 .float-text {
   position: fixed;
   transform: translate(-50%, -50%);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 900;
   color: #f5a623;
   text-shadow: 0 1px 0 #fff, 0 2px 10px rgba(245, 166, 35, 0.6);
   pointer-events: none;
   z-index: 2000;
+  white-space: nowrap;
   animation: floatUp 0.95s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
+.float-text small {
+  font-size: 15px;
+  font-weight: 800;
+  color: #7ba05b;
 }
 
 @keyframes floatUp {
   0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-  25%  { opacity: 1; transform: translate(-50%, -85%) scale(1.25); }
+  25%  { opacity: 1; transform: translate(-50%, -85%) scale(1.2); }
   100% { opacity: 0; transform: translate(-50%, -200%) scale(1); }
 }
 
@@ -278,9 +319,7 @@ body[data-chapter="4"] {
   box-shadow: 0 4px 14px rgba(60, 48, 30, 0.3);
 }
 
-#combo-badge b {
-  font-weight: 800;
-}
+#combo-badge b { font-weight: 800; }
 
 #combo-badge .combo-bar {
   display: block;
@@ -293,28 +332,7 @@ body[data-chapter="4"] {
 
 #combo-badge.hidden { display: none; }
 
-/* ---------- 遮罩层次要按钮（继续 / 从头开始） ---------- */
-.ghost-btn {
-  width: 100%;
-  margin-top: 10px;
-  padding: 12px;
-  border: 1.5px solid #d8d0bd;
-  border-radius: 12px;
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: #9c907c;
-  background: transparent;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.ghost-btn:active { background: #f1ecdf; }
-
-#ov-btn2.hidden { display: none; }
-
-/* ---------- 遮罩层（开始 / 胜利 / 失败） ---------- */
+/* ---------- 简单遮罩层（标题 / 剧情 / 失败 / 章节过场） ---------- */
 #overlay {
   position: fixed;
   inset: 0;
@@ -332,7 +350,7 @@ body[data-chapter="4"] {
 
 .overlay-card {
   width: 100%;
-  max-width: 320px;
+  max-width: 340px;
   padding: 30px 24px 26px;
   text-align: center;
   border-radius: 22px;
@@ -360,7 +378,7 @@ body[data-chapter="4"] {
 
 .overlay-card h2 {
   margin: 0 0 10px;
-  font-size: 23px;
+  font-size: 22px;
   color: var(--accent);
   letter-spacing: 1px;
 }
@@ -370,6 +388,7 @@ body[data-chapter="4"] {
   font-size: 14px;
   line-height: 1.7;
   color: #9c907c;
+  white-space: pre-line;
 }
 
 .main-btn {
@@ -393,6 +412,175 @@ body[data-chapter="4"] {
   transform: translateY(3px);
   box-shadow: 0 1px 0 var(--accent-deep);
 }
+
+/* ---------- 遮罩层次要按钮 ---------- */
+.ghost-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1.5px solid #d8d0bd;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #9c907c;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ghost-btn:active { background: #f1ecdf; }
+
+#ov-btn2.hidden { display: none; }
+
+/* ============================================================
+   功能面板（出发准备 / 三选一构筑 / 回村结算）
+   ============================================================ */
+#panel {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(62, 52, 40, 0.5);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+#panel.hidden { display: none; }
+
+.panel-card {
+  width: 100%;
+  max-width: 380px;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 22px 20px 20px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fffdf8 0%, #f7f2e5 100%);
+  box-shadow: 0 22px 55px rgba(80, 62, 40, 0.3);
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.panel-card h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  color: var(--accent);
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.panel-card .p-sub {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #b0a48e;
+  text-align: center;
+}
+
+.p-sec {
+  margin: 14px 0 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #7d7260;
+  letter-spacing: 1px;
+}
+
+.p-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 2px;
+  font-size: 13px;
+  color: #6d6252;
+  border-bottom: 1px dashed #e8dfcb;
+}
+
+.p-row .dim { color: #b0a48e; font-size: 12px; }
+
+.p-btn {
+  flex: none;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(180deg, var(--accent-2) 0%, var(--accent) 100%);
+  box-shadow: 0 2px 0 var(--accent-deep);
+  cursor: pointer;
+}
+
+.p-btn:active { transform: translateY(2px); box-shadow: none; }
+
+.p-btn:disabled {
+  background: #ded8ca;
+  color: #b0a896;
+  box-shadow: none;
+  cursor: default;
+}
+
+.p-btn.ghost {
+  background: #fff;
+  color: #8a7f6a;
+  border: 1.5px solid #d8d0bd;
+  box-shadow: none;
+}
+
+.opt-card {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid #ddd3bd;
+  border-radius: 14px;
+  background: #fffdf6;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.1s ease, background 0.15s ease;
+}
+
+.opt-card:active { transform: scale(0.98); }
+.opt-card:hover { border-color: var(--accent); }
+
+.opt-card .o-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #5f8a4c;
+}
+
+.opt-card .o-desc {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #9c907c;
+}
+
+.opt-card.locked { opacity: 0.55; cursor: default; }
+
+.opt-card.selected {
+  border-color: var(--accent);
+  background: #f2f7e8;
+  box-shadow: 0 0 0 2px rgba(95, 138, 76, 0.18);
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 9px;
+  margin: 2px 3px 2px 0;
+  border-radius: 999px;
+  background: rgba(95, 138, 76, 0.13);
+  color: #6d7f5e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tag.warn { background: rgba(210, 150, 60, 0.16); color: #a8813d; }
 </style>
 </head>
 <body data-chapter="1">
@@ -405,6 +593,16 @@ body[data-chapter="4"] {
   <div class="hud-item"><span>最高分</span><b id="best-val">0</b></div>
 </header>
 
+<!-- ==================== 资源条 ==================== -->
+<div id="resbar">
+  <span>🌾 <b id="res-f">0</b></span>
+  <span>⛏️ <b id="res-m">0</b></span>
+  <span>✨ <b id="res-r">0</b></span>
+  <span>🪙 <b id="res-gold">0</b></span>
+  <span>🏅 <b id="res-rep">0</b></span>
+  <span id="buffs"></span>
+</div>
+
 <!-- ==================== 卡片堆叠区 ==================== -->
 <main id="board-wrap">
   <div id="board"></div>
@@ -414,69 +612,78 @@ body[data-chapter="4"] {
 <!-- ==================== 底部：槽位 / 暂存区 / 道具 ==================== -->
 <footer id="bottom">
   <div id="slots"></div>
-
   <div id="stash" class="hidden"></div>
-
   <div id="props">
-    <button class="prop-btn" data-prop="shuffle">🔀 洗牌</button>
-    <button class="prop-btn" data-prop="undo">↩️ 撤销</button>
-    <button class="prop-btn" data-prop="remove">📤 移出</button>
+    <button class="prop-btn" data-prop="shuffle" data-label="🔀 洗牌">🔀 洗牌</button>
+    <button class="prop-btn" data-prop="undo" data-label="↩️ 撤销">↩️ 撤销</button>
+    <button class="prop-btn" data-prop="remove" data-label="📤 移出">📤 移出</button>
   </div>
 </footer>
 
 <!-- 卡片渲染层（fixed 定位，覆盖全屏） -->
 <div id="card-layer"></div>
 
-<!-- 遮罩层 -->
+<!-- 简单遮罩层：标题 / 剧情 / 失败 / 章节过场 -->
 <div id="overlay" class="hidden">
   <div class="overlay-card">
     <div class="ov-emoji" id="ov-emoji">🐑</div>
-    <h2 id="ov-title">羊了个羊</h2>
+    <h2 id="ov-title">羊了个羊 · 拾荒远征</h2>
     <p id="ov-desc"></p>
     <button id="ov-btn" class="main-btn">开始游戏</button>
     <button id="ov-btn2" class="ghost-btn hidden">从头开始</button>
   </div>
 </div>
 
+<!-- 功能面板：出发准备 / 三选一构筑 / 回村结算 -->
+<div id="panel" class="hidden">
+  <div class="panel-card" id="panel-body"></div>
+</div>
+
 <script>
 /* ================================================================
- *  羊了个羊 · 救援记
+ *  羊了个羊 · 拾荒远征
  *  ----------------------------------------------------------------
  *  架构说明：
  *    1. 数据层：state.cards 保存所有卡片的逻辑数据（图案、坐标、状态）
- *    2. 渲染层：每个卡片对应一个 DOM 元素，统一放在 #card-layer 中，
- *               用 transform: translate() 定位，方便做飞行动画
- *    3. 逻辑层：遮挡判定 / 槽位三消 / 道具 / 胜负判断
- *    4. 元游戏：章节地图（每 5 关一章，图案与配色随之切换）/
- *               连击计分（5 秒内连续消除，分数翻倍封顶 8 倍）/
- *               localStorage 存档（解锁进度 + 最高分）
+ *    2. 渲染层：卡片 DOM 统一放在 #card-layer，transform 定位方便飞行
+ *    3. 逻辑层：遮挡判定 / 槽位三消（含万能牌）/ 道具 / 胜负判断
+ *    4. 局内构筑：每关出发前从 3 个被动里挑 1 个（改变选择空间，不改数值碾压）
+ *    5. 资源三角：图案分属 食物🌾/材料⛏️/符文✨，消除产出资源
+ *    6. 轻策略：出发准备（订单目标 / 天气 / 随行伙伴 / 携带道具）
+ *    7. 模拟经营：回村交付订单 → 金币 → 升级谷仓/工坊、雇佣伙伴、买道具
+ *       —— 经营只影响「下一局的选项和上限」，不做数值碾压
+ *    8. 存档：localStorage（进度 / 最高分 / 资源 / 金币 / 声望 / 升级）
  * ================================================================ */
 
 /* ---------------- 章节配置 ----------------
-   每 5 关一个章节，各有专属图案池与配色；
-   走完 4 章后主题循环，难度仍随关卡数增长 */
+   每 5 关一章，各有专属图案池与配色；
+   cats 与 emojis 一一对应：f=食物 m=材料 r=符文 */
 const LEVELS_PER_CHAPTER = 5;
 
 const CHAPTERS = [
   {
-    name: '青青草原',
-    intro: '故事开始的地方。\n狼群刚刚离去，草堆下还藏着第一批小羊。',
-    emojis: ['🐑', '🌿', '🥕', '🍎', '🌻', '🪵', '🧶', '🍄'],
+    name: '青青牧场',
+    place: '营地旁的向阳坡地，草料和羊毛最集中。',
+    emojis: ['🐑', '🥕', '🍎', '🌻', '🪵', '🧶', '🍄', '🌿'],
+    cats:   ['f', 'f', 'f', 'f', 'm', 'm', 'r', 'r'],
   },
   {
-    name: '迷雾森林',
-    intro: '羊群逃进了迷雾森林，\n藤蔓和蘑菇盖住了它们的踪迹……',
-    emojis: ['🐑', '🌲', '🍄', '🌰', '🍓', '🐿️', '🪵', '🦔'],
+    name: '迷雾森林遗迹',
+    place: '古代哨塔藏在藤蔓下，木料与古老符文遍地。',
+    emojis: ['🐑', '🍓', '🌰', '🍇', '🪵', '🌲', '🍄', '🔮'],
+    cats:   ['f', 'f', 'f', 'f', 'm', 'm', 'r', 'r'],
   },
   {
-    name: '雪山之巅',
-    intro: '风雪越来越大了，\n小羊们挤在一起取暖。快找到它们！',
-    emojis: ['🐑', '❄️', '⛄', '🧣', '🧤', '🏔️', '☕', '🌲'],
+    name: '雪山矿洞',
+    place: '风雪之下是废弃矿道，冰晶在岩壁上发亮。',
+    emojis: ['🐑', '☕', '🐟', '🧣', '🧤', '🧊', '❄️', '🏔️'],
+    cats:   ['f', 'f', 'f', 'm', 'm', 'm', 'r', 'r'],
   },
   {
-    name: '月光山谷',
-    intro: '月亮升起来了。\n听说狼王就住在这片山谷——小心！',
-    emojis: ['🐑', '🌙', '⭐', '🦉', '🍇', '🕯️', '🔮', '💐'],
+    name: '月光地下城',
+    place: '月亮升起后才开启的地窖，蜂蜜与月光符文共存。',
+    emojis: ['🐑', '🍇', '🍯', '🐟', '🪵', '🕯️', '🌙', '🔮'],
+    cats:   ['f', 'f', 'f', 'f', 'm', 'm', 'r', 'r'],
   },
 ];
 
@@ -487,33 +694,130 @@ function chapterOf(level) {
   return { ...CHAPTERS[idx], index: idx + 1, num };
 }
 
+/* ---------------- 资源 / 天气 / 伙伴 / 道具 / 被动 ---------------- */
+const RES = {
+  f: { icon: '🌾', name: '食物' },
+  m: { icon: '⛏️', name: '材料' },
+  r: { icon: '✨', name: '符文' },
+};
+
+const WEATHERS = [
+  { key: 'sunny', icon: '☀️', name: '晴朗', desc: '风和日丽，一切照常。' },
+  { key: 'rain',  icon: '🌧️', name: '雨天', desc: '食物 +1/次消除，但路滑：连击窗口 -1 秒。' },
+  { key: 'fair',  icon: '🏕️', name: '集市日', desc: '订单报酬与通关金币 ×1.5，村子最热闹的一天。' },
+];
+
+const CREWS = {
+  farmer: { name: '农夫老约', icon: '🧑‍🌾', cat: 'f', desc: '食物类图案明显更多', owned: true },
+  miner:  { name: '矿工阿镐', icon: '⛏️', cat: 'm', desc: '材料类图案明显更多', cost: 30 },
+  clerk:  { name: '学徒小符', icon: '🧙', cat: 'r', desc: '符文类图案明显更多', cost: 60 },
+};
+
+const ITEMS = {
+  peek:  { name: '透视符', icon: '🦉', desc: '本关开局看穿所有被遮挡的牌 4 秒', cost: 15 },
+  guard: { name: '撤回符', icon: '🧿', desc: '槽位满时自动退回最后 3 张牌，救你一次', cost: 40 },
+};
+
+/* 局内被动池：改变选择空间，而不是战力碾压 */
+const PASSIVES = {
+  flow:    { icon: '🌊', name: '连击心流', desc: '本关连击倍率最低按 ×2 起步（首次消除也有 60 分）' },
+  wild:    { icon: '🃏', name: '万能符文', desc: '随机指定一种图案：三缺一时它可以补位，消除时消耗' },
+  undo:    { icon: '↩️', name: '老练之手', desc: '本关「撤销」道具可以使用 2 次' },
+  slot:    { icon: '🧺', name: '宽宏槽位', desc: '本关槽位 +1，代价：本关得分 ×0.8' },
+  harvest: { icon: '🌾', name: '丰收之手', desc: '每次消除额外 +1 个对应资源' },
+  peek:    { icon: '🦉', name: '猫头鹰之眼', desc: '开局看穿所有被遮挡的牌 4 秒' },
+};
+
 /* ---------------- 常量配置 ---------------- */
 const GRID = 7;                 // 棋盘网格边长（每层 7×7 个落点）
-const SLOT_COUNT = 7;           // 槽位数量
+const SLOT_COUNT = 7;           // 基础槽位数量
 const STASH_COUNT = 3;          // 暂存区数量
 const OVERLAP_THRESHOLD = 0.06; // 遮挡判定阈值（重叠面积 / 单卡面积）
 const FLY_DURATION = 340;       // 飞入槽位的动画时长（ms）
-const COMBO_WINDOW = 5000;      // 连击有效窗口（ms），窗口内连续消除分数翻倍
-const SAVE_KEY = 'sheep_rescue_save_v1';  // localStorage 存档键
+const COMBO_WINDOW = 5000;      // 连击有效窗口（ms）
+const SAVE_KEY = 'sheep_v3_save';      // 新版存档键
+const LEGACY_SAVE_KEY = 'sheep_rescue_save_v1'; // 旧版存档键（迁移用）
 
-/* ---------------- 游戏状态 ---------------- */
-const state = {
-  level: 1,          // 当前关卡
-  score: 0,          // 分数
-  cards: [],         // 全部卡片数据
-  slots: [],         // 槽位中的卡片（有序，按图案分组）
-  stash: [],         // 暂存区中的卡片
-  history: [],       // 撤销用的历史记录
-  propsUsed: {},     // 道具使用情况 { shuffle, undo, remove }
-  playing: false,    // 是否处于游戏中
-  S: 42,             // 卡片尺寸（px），布局时动态计算
+/* ---------------- 元游戏存档（跨关卡永久保留） ---------------- */
+let meta = {
+  unlocked: 1, best: 0,
+  gold: 0, rep: 0,
+  res: { f: 0, m: 0, r: 0 },
+  orderCur: null,              // 当前订单 {f,m,r}
+  ordersDone: 0,
+  upgrades: { barn: 0, workshop: 0 },
+  crew: { miner: false, clerk: false },
+  items: { peek: 0, guard: 0 },
 };
 
-/* ---------------- 存档与连击 ---------------- */
-let save = { unlocked: 1, best: 0 };  // 本地存档：已解锁关卡 / 最高分
-let combo = 0;                        // 当前连击数
-let lastMatchAt = 0;                  // 上一次消除的时间戳
-let comboTimer = null;                // 连击提示条的隐藏计时器
+function loadMeta() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      meta.unlocked = Math.max(1, d.unlocked | 0);
+      meta.best = Math.max(0, d.best | 0);
+      meta.gold = Math.max(0, d.gold | 0);
+      meta.rep = Math.max(0, d.rep | 0);
+      meta.ordersDone = d.ordersDone | 0;
+      for (const c of ['f', 'm', 'r']) meta.res[c] = Math.max(0, (d.res && d.res[c]) | 0);
+      if (d.orderCur) meta.orderCur = {
+        f: d.orderCur.f | 0, m: d.orderCur.m | 0, r: d.orderCur.r | 0,
+      };
+      for (const k of ['barn', 'workshop']) meta.upgrades[k] = d.upgrades ? (d.upgrades[k] | 0) : 0;
+      for (const k of ['miner', 'clerk']) meta.crew[k] = !!(d.crew && d.crew[k]);
+      for (const k of ['peek', 'guard']) meta.items[k] = d.items ? Math.max(0, d.items[k] | 0) : 0;
+      return meta;
+    }
+    // 旧版存档迁移：继承关卡进度与最高分
+    const legacy = localStorage.getItem(LEGACY_SAVE_KEY);
+    if (legacy) {
+      const d = JSON.parse(legacy);
+      meta.unlocked = Math.max(1, d.unlocked | 0);
+      meta.best = Math.max(0, d.best | 0);
+    }
+  } catch (e) { /* 存档不可用时静默降级 */ }
+  return meta;
+}
+
+function saveMeta() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(meta)); } catch (e) {}
+}
+
+/* 谷仓容量：每种资源的仓库上限 */
+function resCap() { return 20 + meta.upgrades.barn * 15; }
+/* 工坊加成：随行伙伴偏好类图案的权重倍率 */
+function crewMult() { return 1.5 + meta.upgrades.workshop * 0.25; }
+
+/* ---------------- 对局状态（每关重置） ---------------- */
+const state = {
+  level: 1,
+  score: 0,
+  cards: [],
+  slots: [],
+  stash: [],
+  history: [],
+  propsUsed: {},
+  propMax: { shuffle: 1, undo: 1, remove: 1 },
+  playing: false,
+  S: 42,
+  slotCount: SLOT_COUNT,     // 本关槽位数（可被被动 +1）
+  comboWindow: COMBO_WINDOW, // 本关连击窗口（雨天 -1s）
+  passive: null,             // 本关被动 id
+  wildcard: null,            // 万能牌图案
+  crewKey: 'farmer',         // 随行伙伴
+  weather: 'sunny',          // 本关天气
+  carry: { peek: false, guard: false }, // 携带的消耗品
+  guardUsed: false,          // 撤回符是否已触发
+  gain: { f: 0, m: 0, r: 0 },// 本关入库资源
+  overflow: 0,               // 本关因仓库满而损失的资源
+  expected: { f: 0, m: 0, r: 0 }, // 本关理论产出
+};
+
+let combo = 0;
+let lastMatchAt = 0;
+let comboTimer = null;
+let panelCtx = {};           // 面板临时上下文（出发准备的选择等）
 
 /* ---------------- DOM 引用 ---------------- */
 const cardLayer = document.getElementById('card-layer');
@@ -522,6 +826,8 @@ const boardWrap = document.getElementById('board-wrap');
 const slotsEl   = document.getElementById('slots');
 const stashEl   = document.getElementById('stash');
 const overlayEl = document.getElementById('overlay');
+const panelEl   = document.getElementById('panel');
+const panelBody = document.getElementById('panel-body');
 
 /* ================================================================
  *  工具函数
@@ -536,28 +842,29 @@ function shuffle(arr) {
   return arr;
 }
 
-/** 读取本地存档（隐私模式等场景下静默降级为不存档） */
-function loadSave() {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) {
-      const d = JSON.parse(raw);
-      save.unlocked = Math.max(1, d.unlocked | 0);
-      save.best = Math.max(0, d.best | 0);
-    }
-  } catch (e) { /* 存档不可用时忽略，不影响游戏 */ }
-  return save;
+/** 天气对消除得分的金币倍率（集市日） */
+function goldMult() { return state.weather === 'fair' ? 1.5 : 1; }
+
+/** 资源入库（受谷仓容量限制），返回实际入库数 */
+function bankRes(cat, n) {
+  const cap = resCap();
+  const add = Math.min(n, Math.max(0, cap - meta.res[cat]));
+  meta.res[cat] += add;
+  state.gain[cat] += add;
+  state.overflow += n - add;
+  return add;
 }
 
-/** 写入本地存档 */
-function writeSave() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {}
+/** 把本局收获写回存档（胜/负都会结算） */
+function bankAll() {
+  for (const c of ['f', 'm', 'r']) bankRes(c, state.gain[c]);
+  saveMeta();
 }
 
 /** 创建槽位与暂存区的空格子 */
 function buildCells() {
   slotsEl.innerHTML = '';
-  for (let i = 0; i < SLOT_COUNT; i++) {
+  for (let i = 0; i < state.slotCount; i++) {
     const d = document.createElement('div');
     d.className = 'slot-cell';
     slotsEl.appendChild(d);
@@ -572,24 +879,20 @@ function buildCells() {
 
 /* ================================================================
  *  关卡生成 —— 纯数据，不涉及 DOM
+ *  伙伴偏好：把更多「三连组」分给偏好类图案
  * ================================================================ */
 
-/**
- * 生成一关的卡片数据
- * 规则：
- *   - 卡片总数是 3 的倍数
- *   - 每种图案的数量也是 3 的倍数（保证一定能全部消完）
- *   - 按层堆叠，每层有随机偏移，形成遮挡
- */
-function generateLevel(level) {
-  const pool = chapterOf(level).emojis;  // 本章节的图案池
+function generateLevel(level, crewCat) {
+  const ch = chapterOf(level);
+  const pool = ch.emojis;
+  const cats = ch.cats;
 
   /* --- 1. 计算卡片总数与层数 --- */
-  let total = 60 + (level - 1) * 18;   // 第一关 60 张，之后每关 +18
-  total = Math.min(total, 180);        // 上限，避免手机卡顿
-  total -= total % 3;                  // 确保是 3 的倍数
+  let total = 60 + (level - 1) * 18;
+  total = Math.min(total, 180);
+  total -= total % 3;
 
-  const layers = Math.min(3 + Math.floor((level - 1) / 2), 6); // 3 → 6 层
+  const layers = Math.min(3 + Math.floor((level - 1) / 2), 6);
 
   /* --- 2. 把卡片数平均分到各层 --- */
   const perLayer = [];
@@ -604,8 +907,8 @@ function generateLevel(level) {
   const layerOffsets = [];
   for (let i = 0; i < layers; i++) {
     layerOffsets.push([
-      (Math.random() - 0.5) * 0.6,  // 横向偏移 -0.3 ~ 0.3 格
-      (Math.random() - 0.5) * 0.6,  // 纵向偏移
+      (Math.random() - 0.5) * 0.6,
+      (Math.random() - 0.5) * 0.6,
     ]);
   }
 
@@ -617,9 +920,9 @@ function generateLevel(level) {
 
   const positions = [];
   for (let l = 0; l < layers; l++) {
-    const pool = shuffle(allCells.slice());
+    const cellPool = shuffle(allCells.slice());
     for (let i = 0; i < perLayer[l]; i++) {
-      const [gx, gy] = pool[i % pool.length];
+      const [gx, gy] = cellPool[i % cellPool.length];
       positions.push({
         layer: l,
         gx, gy,
@@ -629,14 +932,33 @@ function generateLevel(level) {
     }
   }
 
-  /* --- 5. 分配图案：以「三张一组」为单位分配，保证每种图案都是 3 的倍数 --- */
+  /* --- 5. 分配图案：三张一组，按伙伴偏好把组倾斜到对应类别 --- */
   const totalCards = positions.length;
   const triples = totalCards / 3;
   const kinds = Math.max(3, Math.min(pool.length, Math.round(triples / 3.5)));
 
-  // 每种图案分到多少组（尽量平均）
+  // 每种图案基础组数（尽量平均）
   const groups = new Array(kinds).fill(0);
   for (let i = 0; i < triples; i++) groups[i % kinds]++;
+
+  // 伙伴偏好：把一部分组从其他类别挪到偏好类别
+  if (crewCat) {
+    const favIdx = [], otherIdx = [];
+    for (let k = 0; k < kinds; k++) (cats[k] === crewCat ? favIdx : otherIdx).push(k);
+    if (favIdx.length && otherIdx.length) {
+      let move = Math.floor(triples * 0.18);
+      let fi = 0;
+      otherIdx.sort((a, b) => groups[b] - groups[a]); // 从最多的开始拿
+      while (move > 0) {
+        const donor = otherIdx.find(k => groups[k] > 1);
+        if (donor === undefined) break;
+        groups[donor]--;
+        groups[favIdx[fi % favIdx.length]]++;
+        fi++;
+        move--;
+      }
+    }
+  }
 
   const emojiList = [];
   for (let i = 0; i < kinds; i++) {
@@ -644,8 +966,12 @@ function generateLevel(level) {
   }
   shuffle(emojiList);
 
-  /* --- 6. 组装卡片数据 --- */
-  return positions.map((p, i) => ({
+  /* --- 6. 理论产出（每张牌消除时折算 1 资源） --- */
+  const expected = { f: 0, m: 0, r: 0 };
+  for (let i = 0; i < kinds; i++) expected[cats[i]] += groups[i] * 3;
+
+  /* --- 7. 组装卡片数据 --- */
+  const cards = positions.map((p, i) => ({
     id: i,
     emoji: emojiList[i],
     layer: p.layer,
@@ -657,39 +983,34 @@ function generateLevel(level) {
     blocked: false,
     el: null,
   }));
+  return { cards, expected };
 }
 
 /* ================================================================
  *  尺寸计算与布局
  * ================================================================ */
 
-/** 根据可用空间计算卡片尺寸、棋盘尺寸、槽位格子尺寸 */
 function computeSizes() {
   const wrapW = boardWrap.clientWidth - 12;
   const wrapH = boardWrap.clientHeight - 12;
 
-  // 槽位宽度约束：7 个格子 + 6 个间隙 + 左右 padding
   const slotAvail = Math.min(window.innerWidth - 32, 420);
   const gap = 6;
-  const sFromSlot = Math.floor((slotAvail - gap * (SLOT_COUNT - 1) - 16) / SLOT_COUNT);
+  const sFromSlot = Math.floor((slotAvail - gap * (state.slotCount - 1) - 16) / state.slotCount);
 
-  // 棋盘按 7.6 格宽度预留（给层偏移留出余量）
   let S = Math.floor(Math.min(wrapW / 7.6, wrapH / 7.6, sFromSlot));
   S = Math.max(24, Math.min(54, S));
 
   state.S = S;
 
-  // 棋盘尺寸
   boardEl.style.width = S * GRID + 'px';
   boardEl.style.height = S * GRID + 'px';
 
-  // 槽位 / 暂存区格子尺寸
   document.querySelectorAll('.slot-cell, .stash-cell').forEach(el => {
     el.style.width = S + 'px';
     el.style.height = S + 'px';
   });
 
-  // 同步已有卡片尺寸
   for (const card of state.cards) {
     if (!card.el) continue;
     card.el.style.width = S + 'px';
@@ -698,15 +1019,10 @@ function computeSizes() {
   }
 }
 
-/**
- * 重新计算所有卡片的位置并应用
- * @param {boolean} instant 是否禁用过渡（用于首次布局）
- */
 function positionAll(instant = false) {
   const S = state.S;
   const br = boardEl.getBoundingClientRect();
 
-  // 槽位 / 暂存区各格子的屏幕坐标
   const slotRects  = [...document.querySelectorAll('.slot-cell')].map(el => el.getBoundingClientRect());
   const stashRects = [...document.querySelectorAll('.stash-cell')].map(el => el.getBoundingClientRect());
 
@@ -721,18 +1037,14 @@ function positionAll(instant = false) {
     let x = 0, y = 0, z = 0;
 
     if (card.state === 'board') {
-      // 棋盘上的卡片：网格坐标 + 层偏移
       x = br.left + card.gx * S + card.ox * S;
       y = br.top  + card.gy * S + card.oy * S;
       z = 10 + card.layer * 10;
-
     } else if (card.state === 'slot') {
-      // 槽位中的卡片：按它在数组中的位置对齐格子
       const i = state.slots.indexOf(card);
       const r = slotRects[i];
       if (r) { x = r.left; y = r.top; }
       z = 600 + i;
-
     } else if (card.state === 'stash') {
       const i = state.stash.indexOf(card);
       const r = stashRects[i];
@@ -755,16 +1067,11 @@ function positionAll(instant = false) {
  *  遮挡判定
  * ================================================================ */
 
-/**
- * 判断某张卡片是否被上层卡片遮挡
- * 原理：与所有层数更高的卡片做矩形重叠面积比较
- */
 function isCardBlocked(card, boardCards) {
   for (const other of boardCards) {
     if (other === card) continue;
-    if (other.layer <= card.layer) continue; // 只看更高层
+    if (other.layer <= card.layer) continue;
 
-    // 用「格」为单位计算矩形（含层偏移）
     const ax = card.gx + card.ox,  ay = card.gy + card.oy;
     const bx = other.gx + other.ox, by = other.gy + other.oy;
 
@@ -776,7 +1083,6 @@ function isCardBlocked(card, boardCards) {
   return false;
 }
 
-/** 刷新所有棋盘卡片的遮挡状态 */
 function updateBlocked() {
   const boardCards = state.cards.filter(c => c.state === 'board');
   for (const card of boardCards) {
@@ -787,10 +1093,9 @@ function updateBlocked() {
 }
 
 /* ================================================================
- *  槽位逻辑
+ *  槽位逻辑（含万能牌）
  * ================================================================ */
 
-/** 把卡片插入槽位（相同图案自动挨在一起） */
 function insertIntoSlot(card) {
   let idx = -1;
   for (let i = state.slots.length - 1; i >= 0; i--) {
@@ -802,7 +1107,6 @@ function insertIntoSlot(card) {
 
 let resolveTimer = null;
 
-/** 延迟触发结算（等飞行动画播完） */
 function scheduleResolve() {
   clearTimeout(resolveTimer);
   resolveTimer = setTimeout(() => {
@@ -811,28 +1115,47 @@ function scheduleResolve() {
   }, FLY_DURATION);
 }
 
-/** 检查槽位中是否有 3 张相同图案 */
-function resolveSlots() {
-  if (!state.playing && state.cards.length === 0) return;
-
-  // 统计
+/** 找出一组可消除的三张牌（普通三连 或 两张 + 万能牌） */
+function findMatch() {
   const count = {};
   for (const c of state.slots) count[c.emoji] = (count[c.emoji] || 0) + 1;
 
-  let target = null;
+  // 普通三连
   for (const e in count) {
-    if (count[e] >= 3) { target = e; break; }
+    if (count[e] >= 3) {
+      const matched = [];
+      for (const c of state.slots) {
+        if (c.emoji === e && matched.length < 3) matched.push(c);
+      }
+      return { matched, kind: e, wild: null };
+    }
   }
 
-  if (target) {
-    // ---- 找出 3 张相同卡片 ----
-    const matched = [];
-    for (const c of state.slots) {
-      if (c.emoji === target && matched.length < 3) matched.push(c);
+  // 两张 + 万能牌（万能牌自身不参与普通三连判断）
+  if (state.wildcard) {
+    for (const e in count) {
+      if (e === state.wildcard || count[e] !== 2) continue;
+      const wildCard = state.slots.find(c => c.emoji === state.wildcard);
+      if (!wildCard) continue;
+      const pair = [];
+      for (const c of state.slots) {
+        if (c.emoji === e && pair.length < 2) pair.push(c);
+      }
+      return { matched: [...pair, wildCard], kind: e, wild: wildCard };
     }
+  }
+  return null;
+}
+
+function resolveSlots() {
+  if (!state.playing && state.cards.length === 0) return;
+
+  const match = findMatch();
+
+  if (match) {
+    const { matched, kind, wild } = match;
     state.slots = state.slots.filter(c => !matched.includes(c));
 
-    // ---- 消除动画 ----
     for (const c of matched) {
       c.state = 'removed';
       c.el.style.transform += ' scale(0.15)';
@@ -840,35 +1163,47 @@ function resolveSlots() {
       c.el.style.pointerEvents = 'none';
     }
 
-    // ---- 连击判定 + 计分 ----
+    /* ---- 连击与得分 ---- */
     const now = Date.now();
-    combo = (now - lastMatchAt <= COMBO_WINDOW) ? combo + 1 : 1;
+    combo = (now - lastMatchAt <= state.comboWindow) ? combo + 1 : 1;
     lastMatchAt = now;
 
-    // 连击倍率：1 / 2 / 4 / 8 倍封顶（+30 / +60 / +120 / +240）
-    const points = 30 * Math.pow(2, Math.min(combo - 1, 3));
+    let mult = Math.pow(2, Math.min(combo - 1, 3));
+    if (state.passive === 'flow' && mult < 2) mult = 2;      // 连击心流：保底 ×2
+    const slotMult = state.passive === 'slot' ? 0.8 : 1;      // 宽宏槽位：得分 ×0.8
+    const points = Math.round(30 * mult * slotMult);
     state.score += points;
-
-    // 分数实时计入存档（中途退出也不丢最高分）
-    if (state.score > save.best) {
-      save.best = state.score;
-      writeSave();
+    if (state.score > meta.best) {
+      meta.best = state.score;
+      saveMeta();
     }
 
+    /* ---- 资源产出 ---- */
+    const ch = chapterOf(state.level);
+    const idx = ch.emojis.indexOf(kind);
+    const cat = ch.cats[idx] || 'f';
+    let gainN = 3;
+    if (state.passive === 'harvest') gainN += 1;              // 丰收之手
+    if (state.weather === 'rain' && cat === 'f') gainN += 1;  // 雨天食物 +
+    bankRes(cat, gainN);
+
+    /* ---- 飘字 ---- */
     const sr = slotsEl.getBoundingClientRect();
-    showFloat(combo > 1 ? `+${points} 连击×${combo}` : `+${points}`,
-              sr.left + sr.width / 2, sr.top - 6);
+    const bits = [`+${points}`];
+    if (combo > 1) bits.push(`连击×${combo}`);
+    showFloat(
+      `${bits.join(' ')} <small>+${gainN} ${RES[cat].icon}${wild ? ' 🃏' : ''}</small>`,
+      sr.left + sr.width / 2, sr.top - 6
+    );
     if (combo > 1) showComboBadge(combo);
 
     updateHUD();
 
-    // ---- 动画结束后清理 DOM 并递归检查 ----
     setTimeout(() => {
       matched.forEach(c => { c.el.remove(); c.el = null; });
       positionAll();
       updateHUD();
       afterResolve();
-      // 递归：理论上不会有第二组，但保险起见
       if (state.slots.length >= 3) resolveSlots();
     }, 300);
 
@@ -877,7 +1212,7 @@ function resolveSlots() {
   }
 }
 
-/** 结算后的胜负判断 */
+/** 结算后的胜负判断（撤回符可拦截一次失败） */
 function afterResolve() {
   if (!state.playing) return;
 
@@ -886,27 +1221,70 @@ function afterResolve() {
     winLevel();
     return;
   }
-  if (state.slots.length >= SLOT_COUNT) {
+  if (state.slots.length >= state.slotCount) {
+    // 撤回符：自动退回最后 3 张，拦截一次失败
+    if (state.carry.guard && !state.guardUsed) {
+      state.guardUsed = true;
+      saveMeta(); // 消耗记入存档
+      const back = state.slots.splice(-3);
+      for (const card of back) restoreToBoard(card);
+      const sr = slotsEl.getBoundingClientRect();
+      showFloat('<small>🧿 撤回符生效！</small>', sr.left + sr.width / 2, sr.top - 40);
+      updateBlocked();
+      positionAll();
+      updateHUD();
+      return;
+    }
     loseLevel();
   }
 }
 
+/** 把一张槽位中的牌退回棋盘（优先原位，否则找空位） */
+function restoreToBoard(card) {
+  // 找它最近的点击历史
+  for (let i = state.history.length - 1; i >= 0; i--) {
+    if (state.history[i].card === card) {
+      const rec = state.history.splice(i, 1)[0];
+      card.gx = rec.gx; card.gy = rec.gy;
+      card.ox = rec.ox; card.oy = rec.oy;
+      card.layer = rec.layer;
+      card.state = 'board';
+      return;
+    }
+  }
+  // 没有历史（从暂存区点回的）：找一个空闲落点
+  const occupied = new Set(
+    state.cards.filter(c => c.state === 'board')
+      .map(c => c.layer + ':' + c.gx + ',' + c.gy)
+  );
+  outer:
+  for (let l = 0; l < 6; l++) {
+    for (let x = 0; x < GRID; x++) {
+      for (let y = 0; y < GRID; y++) {
+        if (!occupied.has(l + ':' + x + ',' + y)) {
+          card.layer = l; card.gx = x; card.gy = y;
+          card.ox = 0; card.oy = 0;
+          card.state = 'board';
+          break outer;
+        }
+      }
+    }
+  }
+}
+
 /* ================================================================
- *  飘分文字
+ *  飘分文字 / 连击提示
  * ================================================================ */
-function showFloat(text, x, y) {
+function showFloat(html, x, y) {
   const el = document.createElement('div');
   el.className = 'float-text';
-  el.textContent = text;
+  el.innerHTML = html;
   el.style.left = x + 'px';
   el.style.top = y + 'px';
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 950);
 }
 
-/* ================================================================
- *  连击提示条（显示倍率 + 剩余时间）
- * ================================================================ */
 function showComboBadge(n) {
   const badge = document.getElementById('combo-badge');
   const txt = document.getElementById('combo-txt');
@@ -915,33 +1293,54 @@ function showComboBadge(n) {
   txt.textContent = `连击 ×${n}`;
   badge.classList.remove('hidden');
 
-  // 倒计时条：从满到空表示连击剩余时间
   bar.style.transition = 'none';
   bar.style.width = '100%';
   requestAnimationFrame(() => {
-    bar.style.transition = `width ${COMBO_WINDOW}ms linear`;
+    bar.style.transition = `width ${state.comboWindow}ms linear`;
     bar.style.width = '0%';
   });
 
   clearTimeout(comboTimer);
-  comboTimer = setTimeout(() => badge.classList.add('hidden'), COMBO_WINDOW);
+  comboTimer = setTimeout(() => badge.classList.add('hidden'), state.comboWindow);
 }
 
 /* ================================================================
- *  HUD 与道具按钮状态
+ *  HUD
  * ================================================================ */
 function updateHUD() {
   document.getElementById('level-val').textContent = state.level;
   document.getElementById('remain-val').textContent =
     state.cards.filter(c => c.state !== 'removed').length;
   document.getElementById('score-val').textContent = state.score;
-  document.getElementById('best-val').textContent = save.best;
+  document.getElementById('best-val').textContent = meta.best;
+
+  document.getElementById('res-f').textContent = meta.res.f;
+  document.getElementById('res-m').textContent = meta.res.m;
+  document.getElementById('res-r').textContent = meta.res.r;
+  document.getElementById('res-gold').textContent = meta.gold;
+  document.getElementById('res-rep').textContent = meta.rep;
+
+  // 增益徽章
+  const chips = [];
+  if (state.crewKey) {
+    chips.push(`${CREWS[state.crewKey].icon} ${CREWS[state.crewKey].name}`);
+  }
+  const w = WEATHERS.find(w => w.key === state.weather);
+  if (w && w.key !== 'sunny') chips.push(`${w.icon} ${w.name}`);
+  if (state.passive) chips.push(`${PASSIVES[state.passive].icon} ${PASSIVES[state.passive].name}`);
+  if (state.wildcard) chips.push(`🃏 万能:${state.wildcard}`);
+  document.getElementById('buffs').innerHTML =
+    chips.map(t => `<span class="buff-chip">${t}</span>`).join('');
 }
 
 function updateProps() {
   document.querySelectorAll('.prop-btn').forEach(btn => {
     const key = btn.dataset.prop;
-    btn.disabled = !state.playing || !!state.propsUsed[key];
+    const used = state.propsUsed[key] || 0;
+    const max = state.propMax[key] || 1;
+    btn.disabled = !state.playing || used >= max;
+    const left = max - used;
+    btn.innerHTML = btn.dataset.label + (left > 1 ? ` ×${left}` : '');
   });
 }
 
@@ -949,11 +1348,12 @@ function updateProps() {
  *  卡片交互
  * ================================================================ */
 
-/** 统一的卡片点击入口 */
+let overlayHiddenAt = 0; // 防止弹窗关闭瞬间误点卡片
+
 function onCardClick(card) {
   if (!state.playing) return;
-  // 弹窗刚关闭的 250ms 内忽略：防止连点按钮时误选卡片
   if (Date.now() - overlayHiddenAt < 250) return;
+  if (Date.now() - panelHiddenAt < 250) return;
 
   if (card.state === 'board') {
     handleBoardCardClick(card);
@@ -962,21 +1362,17 @@ function onCardClick(card) {
   }
 }
 
-/** 点击棋盘上的卡片 */
 function handleBoardCardClick(card) {
-  // 被遮挡 → 抖一下表示不能点
   if (card.blocked) {
     card.el.classList.remove('shake');
-    void card.el.offsetWidth; // 触发重排以重启动画
+    void card.el.offsetWidth;
     card.el.classList.add('shake');
     setTimeout(() => card.el.classList.remove('shake'), 260);
     return;
   }
 
-  // 槽位已满 → 忽略
-  if (state.slots.length >= SLOT_COUNT) return;
+  if (state.slots.length >= state.slotCount) return;
 
-  // 记录历史（用于撤销）
   state.history.push({
     card,
     gx: card.gx, gy: card.gy,
@@ -984,27 +1380,23 @@ function handleBoardCardClick(card) {
     layer: card.layer,
   });
 
-  // 点按缩放反馈
   const face = card.el.querySelector('.face');
   if (face) {
     face.style.transform = 'scale(1.3)';
     setTimeout(() => { if (face) face.style.transform = ''; }, 150);
   }
 
-  // 移入槽位
   card.state = 'slot';
   insertIntoSlot(card);
 
   updateBlocked();
   positionAll();
   updateHUD();
-
   scheduleResolve();
 }
 
-/** 点击暂存区的卡片：有空间则放回槽位 */
 function handleStashCardClick(card) {
-  if (state.slots.length >= SLOT_COUNT) return;
+  if (state.slots.length >= state.slotCount) return;
 
   const i = state.stash.indexOf(card);
   if (i === -1) return;
@@ -1015,7 +1407,6 @@ function handleStashCardClick(card) {
 
   if (state.stash.length === 0) {
     stashEl.classList.add('hidden');
-    // 布局变化后重新计算尺寸
     requestAnimationFrame(() => {
       computeSizes();
       positionAll();
@@ -1032,14 +1423,14 @@ function handleStashCardClick(card) {
  *  道具系统
  * ================================================================ */
 
-/** 洗牌：重新随机分配场上剩余卡片的图案（位置不变） */
 function useShuffle() {
-  if (!state.playing || state.propsUsed.shuffle) return;
+  if (!state.playing) return;
+  if ((state.propsUsed.shuffle || 0) >= (state.propMax.shuffle || 1)) return;
 
   const boardCards = state.cards.filter(c => c.state === 'board');
   if (boardCards.length < 2) return;
 
-  state.propsUsed.shuffle = true;
+  state.propsUsed.shuffle = (state.propsUsed.shuffle || 0) + 1;
 
   const emojis = boardCards.map(c => c.emoji);
   shuffle(emojis);
@@ -1048,46 +1439,39 @@ function useShuffle() {
     c.emoji = emojis[i];
     const face = c.el.querySelector('.face');
     if (face) face.textContent = emojis[i];
-    // 闪一下，给玩家反馈
     c.el.style.transform += ' scale(0.85)';
     setTimeout(() => {
       c.el.style.transform = c.el.style.transform.replace(' scale(0.85)', '');
     }, 150);
   });
 
-  // 洗牌后清空历史，避免撤销出问题
   state.history = state.history.filter(h => h.card.state === 'board');
-
   updateProps();
   updateBlocked();
 }
 
-/** 撤销：把槽位里最后一张卡片退回它原来的位置 */
 function useUndo() {
-  if (!state.playing || state.propsUsed.undo) return;
+  if (!state.playing) return;
+  if ((state.propsUsed.undo || 0) >= (state.propMax.undo || 1)) return;
   if (state.slots.length === 0) return;
 
-  // 从历史中找最近一张仍在槽位里的卡片
   let rec = null;
   while (state.history.length) {
     const r = state.history[state.history.length - 1];
     if (state.slots.includes(r.card)) { rec = state.history.pop(); break; }
-    state.history.pop(); // 已经不在槽位了，丢弃这条记录
+    state.history.pop();
   }
   if (!rec) return;
 
-  state.propsUsed.undo = true;
+  state.propsUsed.undo = (state.propsUsed.undo || 0) + 1;
 
   const card = rec.card;
   const idx = state.slots.indexOf(card);
   if (idx !== -1) state.slots.splice(idx, 1);
 
-  // 恢复卡片到棋盘
   card.state = 'board';
-  card.gx = rec.gx;
-  card.gy = rec.gy;
-  card.ox = rec.ox;
-  card.oy = rec.oy;
+  card.gx = rec.gx; card.gy = rec.gy;
+  card.ox = rec.ox; card.oy = rec.oy;
   card.layer = rec.layer;
 
   updateBlocked();
@@ -1096,12 +1480,12 @@ function useUndo() {
   updateProps();
 }
 
-/** 移出：把槽位最左边的 3 张卡片移到暂存区 */
 function useRemove() {
-  if (!state.playing || state.propsUsed.remove) return;
+  if (!state.playing) return;
+  if ((state.propsUsed.remove || 0) >= (state.propMax.remove || 1)) return;
   if (state.slots.length === 0) return;
 
-  state.propsUsed.remove = true;
+  state.propsUsed.remove = (state.propsUsed.remove || 0) + 1;
 
   const moving = state.slots.splice(0, Math.min(3, state.slots.length));
   moving.forEach(c => {
@@ -1111,7 +1495,6 @@ function useRemove() {
 
   stashEl.classList.remove('hidden');
 
-  // 让浏览器先完成布局，再计算位置
   requestAnimationFrame(() => {
     computeSizes();
     positionAll();
@@ -1123,12 +1506,10 @@ function useRemove() {
 }
 
 /* ================================================================
- *  胜负与遮罩层
+ *  遮罩层（简单流程：标题 / 剧情 / 失败 / 章节过场）
  * ================================================================ */
 
-/** 显示遮罩层（btn2Text / onClick2 可选，用于「继续 / 从头开始」双按钮） */
-let overlayShownAt = 0;   // 弹窗出现时间，用于双击防误触
-let overlayHiddenAt = 0;  // 弹窗关闭时间，防止双击误点到底部卡片
+let overlayShownAt = 0;
 
 function showOverlay({ emoji, title, desc, btnText, onClick, btn2Text, onClick2 }) {
   document.getElementById('ov-emoji').textContent = emoji;
@@ -1137,10 +1518,8 @@ function showOverlay({ emoji, title, desc, btnText, onClick, btn2Text, onClick2 
 
   const btn = document.getElementById('ov-btn');
   btn.textContent = btnText;
-  // 替换按钮（清除旧监听）
   const fresh = btn.cloneNode(true);
   btn.parentNode.replaceChild(fresh, btn);
-  // 弹窗刚出现的 300ms 内忽略点击：防止双击穿过弹窗（如跳过章节剧情）
   const guard = fn => () => {
     if (Date.now() - overlayShownAt < 300) return;
     overlayHiddenAt = Date.now();
@@ -1167,59 +1546,349 @@ function hideOverlay() {
   overlayEl.classList.add('hidden');
 }
 
-/** 过关 */
-function winLevel() {
-  state.playing = false;
-  updateProps();
+/* ================================================================
+ *  功能面板（出发准备 / 三选一 / 回村）
+ * ================================================================ */
 
-  // 解锁下一关并写存档
-  save.unlocked = Math.max(save.unlocked, state.level + 1);
-  save.best = Math.max(save.best, state.score);
-  writeSave();
+let panelHiddenAt = 0;
 
-  const cur = chapterOf(state.level);
-  const next = chapterOf(state.level + 1);
-  const isNewChapter = next.num !== cur.num;
-
-  setTimeout(() => {
-    showOverlay({
-      emoji: '🎉',
-      title: `第 ${state.level} 关通关！`,
-      desc: (isNewChapter ? `狼群带着剩余的小羊往${next.name}逃去了……\n` : '') +
-            `当前总分：${state.score} 分\n下一关卡片会更多哦～`,
-      btnText: isNewChapter ? `追去第 ${next.num} 章 · ${next.name}` : '下一关',
-      onClick: () => {
-        hideOverlay();
-        if (isNewChapter) showChapterIntro(next, state.level + 1);
-        else startLevel(state.level + 1);
-      },
-    });
-  }, 260);
+function openPanel(html) {
+  panelBody.innerHTML = html;
+  panelEl.classList.remove('hidden');
+  panelBody.scrollTop = 0;
 }
 
-/** 章节开场的剧情过场 */
+function closePanel() {
+  panelEl.classList.add('hidden');
+  panelHiddenAt = Date.now();
+}
+
+/* ---------- 订单 ---------- */
+function newOrder(level) {
+  // 只要求当前关卡「产得出」的资源，需求量约为该类理论产出的 40%~75%
+  const est = estimateYield(level, null);
+  const avail = ['f', 'm', 'r'].filter(c => est[c] >= 6);
+  const factors = shuffle([0.75, 0.55, 0.4]);
+  const order = { f: 0, m: 0, r: 0 };
+  avail.forEach((c, i) => {
+    order[c] = Math.max(3, Math.round(est[c] * factors[i] / 3) * 3);
+  });
+  if (!avail.length) order.f = 6; // 兜底
+  return order;
+}
+
+function orderReward(order) {
+  const base = (order.f + order.m + order.r) * 3 + 10;
+  return Math.round(base * goldMult());
+}
+
+function canDeliver(order) {
+  return ['f', 'm', 'r'].every(c => meta.res[c] >= order[c]);
+}
+
+/* ---------- 出发准备 ---------- */
+function rollWeather() {
+  const r = Math.random();
+  if (r < 0.45) return 'sunny';
+  if (r < 0.75) return 'rain';
+  return 'fair';
+}
+
+function toPrep(level) {
+  state.level = level;
+  state.weather = rollWeather();
+  if (!meta.orderCur) {
+    meta.orderCur = newOrder(level);
+    saveMeta();
+  }
+  panelCtx = {
+    level,
+    crewKey: panelCtx.crewKey || 'farmer',
+    carry: { peek: false, guard: false },
+  };
+  // 章节切换的剧情过场
+  const prev = level > 1 ? chapterOf(level - 1) : null;
+  const cur = chapterOf(level);
+  if (prev && prev.num !== cur.num) {
+    showChapterIntro(cur, level);
+    return;
+  }
+  openPrep();
+}
+
 function showChapterIntro(ch, level) {
   const emoji = ['🌾', '🌲', '🏔️', '🌙'][ch.index - 1];
   showOverlay({
     emoji,
     title: `第 ${ch.num} 章 · ${ch.name}`,
-    desc: ch.intro,
-    btnText: '开始营救',
-    onClick: () => { hideOverlay(); startLevel(level); },
+    desc: ch.place + '\n\n「打包好装备，小队出发！」',
+    btnText: '查看任务',
+    onClick: () => { hideOverlay(); openPrep(); },
   });
 }
 
-/** 失败 */
+function estimateYield(level, crewCat) {
+  const ch = chapterOf(level);
+  const total = Math.min(60 + (level - 1) * 18, 180);
+  const triples = Math.floor(total / 3);
+  const kinds = Math.max(3, Math.min(ch.emojis.length, Math.round(triples / 3.5)));
+  const base = triples / kinds * 3;
+  const est = { f: 0, m: 0, r: 0 };
+  for (let k = 0; k < kinds; k++) est[ch.cats[k]] += base;
+  // 伙伴偏好：约 18% 的组被挪到偏好类
+  if (crewCat && est[crewCat] > 0) {
+    const moved = Math.floor(triples * 0.18) * 3;
+    const donors = ['f', 'm', 'r'].filter(c => c !== crewCat);
+    for (const d of donors) {
+      const take = Math.min(est[d] - Math.round(base), Math.floor(moved / donors.length));
+      if (take > 0) { est[d] -= take; est[crewCat] += take; }
+    }
+  }
+  for (const c of ['f', 'm', 'r']) est[c] = Math.round(est[c]);
+  return est;
+}
+
+function openPrep() {
+  const level = panelCtx.level;
+  const ch = chapterOf(level);
+  const w = WEATHERS.find(x => x.key === state.weather);
+  const o = meta.orderCur || newOrder(level);
+  const est = estimateYield(level, panelCtx.crewKey);
+  const reward = orderReward(o);
+
+  const crewBtns = Object.entries(CREWS).map(([key, c]) => {
+    const owned = c.owned || meta.crew[key];
+    const sel = panelCtx.crewKey === key;
+    return `<button class="opt-card ${owned ? '' : 'locked'} ${sel ? 'selected' : ''}"
+      data-act="${owned ? 'crew' : 'hint'}" data-arg="${key}">
+      <span class="o-name">${c.icon} ${c.name}${sel ? ' ✔' : ''}</span>
+      <span class="o-desc">${c.desc}${owned ? '' : ` · 未雇佣（回村客栈雇佣 ${c.cost}🪙）`}</span>
+    </button>`;
+  }).join('');
+
+  const itemRows = Object.entries(ITEMS).map(([key, it]) => {
+    const n = meta.items[key] || 0;
+    const carried = panelCtx.carry[key];
+    return `<div class="p-row">
+      <span>${it.icon} ${it.name} <span class="dim">×${n} · ${it.desc}</span></span>
+      <button class="p-btn ${carried ? 'ghost' : ''}" data-act="item" data-arg="${key}"
+        ${n <= 0 ? 'disabled' : ''}>${carried ? '已携带 ✔' : '携带'}</button>
+    </div>`;
+  }).join('');
+
+  openPanel(`
+    <h2>远征准备 · 第 ${level} 关</h2>
+    <p class="p-sub">${ch.name}</p>
+
+    <div class="p-sec">${w.icon} 天气 · ${w.name}</div>
+    <div class="p-row"><span>${w.desc}</span></div>
+
+    <div class="p-sec">📜 当前订单（回村交付）</div>
+    <div class="p-row">
+      <span>🌾×${o.f}　⛏️×${o.m}　✨×${o.r}</span>
+      <span class="dim">报酬 ${reward}🪙 +2🏅</span>
+    </div>
+
+    <div class="p-sec">🎒 本关预计产出（伙伴：${CREWS[panelCtx.crewKey].name}）</div>
+    <div class="p-row">
+      <span>🌾 约${est.f}　⛏️ 约${est.m}　✨ 约${est.r}</span>
+      <span class="dim">谷仓上限 ${resCap()}/类</span>
+    </div>
+
+    <div class="p-sec">🧑‍🌾 选择随行伙伴（影响本关图案产出）</div>
+    ${crewBtns}
+
+    <div class="p-sec">🧿 携带道具</div>
+    ${itemRows}
+
+    <button class="main-btn" style="margin-top:16px" data-act="go">出 发 ！</button>
+    <p class="p-sub" style="margin-top:10px">出发后会随机出现 3 项被动，选 1 项生效本关</p>
+  `);
+}
+
+/* ---------- 三选一构筑 ---------- */
+function openPassivePick() {
+  const ids = shuffle(Object.keys(PASSIVES)).slice(0, 3);
+  panelCtx.passiveIds = ids;
+  const cards = ids.map(id => {
+    const p = PASSIVES[id];
+    return `<button class="opt-card" data-act="pick" data-arg="${id}">
+      <span class="o-name">${p.icon} ${p.name}</span>
+      <span class="o-desc">${p.desc}</span>
+    </button>`;
+  }).join('');
+  openPanel(`
+    <h2>局内构筑 · 三选一</h2>
+    <p class="p-sub">选择 1 项被动，只在本关生效</p>
+    ${cards}
+  `);
+}
+
+/* ---------- 回村结算 ---------- */
+function openVillage() {
+  const level = panelCtx.level;
+  const o = meta.orderCur;
+  const g = state.gain;
+  const gainText =
+    `+${g.f} 🌾食物　+${g.m} ⛏️材料　+${g.r} ✨符文` +
+    (state.overflow > 0 ? `　<span class="tag warn">仓库满，损失 ${state.overflow}</span>` : '');
+  const clearGold = Math.round((8 + state.level * 2) * goldMult());
+  const deliverable = o && canDeliver(o);
+
+  let orderRow;
+  if (!o) {
+    orderRow = `<div class="p-row"><span>暂无订单</span><span class="dim">下一关会接到新订单</span></div>`;
+  } else {
+    orderRow = `<div class="p-row">
+      <span>🌾×${o.f}　⛏️×${o.m}　✨×${o.r}</span>
+      <button class="p-btn" data-act="deliver" ${deliverable ? '' : 'disabled'}>
+        ${deliverable ? `交付 +${orderReward(o)}🪙 +2🏅` : '资源不足'}
+      </button>
+    </div>`;
+  }
+
+  const barnCost = 20 + meta.upgrades.barn * 15;
+  const workCost = 30 + meta.upgrades.workshop * 20;
+
+  openPanel(`
+    <h2>回村结算 🏡</h2>
+    <p class="p-sub">第 ${state.level} 关 · 总分 ${state.score} ${state.score >= meta.best ? '· 新纪录！' : ''}</p>
+
+    <div class="p-sec">🎒 本关收获（已入仓库）</div>
+    <div class="p-row"><span>${gainText}</span></div>
+    <div class="p-row"><span>🪙 通关奖励</span><b>+${clearGold} 金币</b></div>
+
+    <div class="p-sec">📜 订单（${meta.ordersDone} 单已完成）</div>
+    ${orderRow}
+
+    <div class="p-sec">🏠 村庄建设</div>
+    <div class="p-row">
+      <span>🏚️ 谷仓 Lv.${meta.upgrades.barn} <span class="dim">资源上限 ${resCap()}/类</span></span>
+      <button class="p-btn" data-act="buy" data-arg="barn" ${meta.gold >= barnCost ? '' : 'disabled'}>升级 ${barnCost}🪙</button>
+    </div>
+    <div class="p-row">
+      <span>🔨 工坊 Lv.${meta.upgrades.workshop} <span class="dim">伙伴偏好加成 ×${crewMult().toFixed(2)}</span></span>
+      <button class="p-btn" data-act="buy" data-arg="workshop" ${meta.gold >= workCost ? '' : 'disabled'}>升级 ${workCost}🪙</button>
+    </div>
+
+    <div class="p-sec">🧿 道具与伙伴</div>
+    <div class="p-row">
+      <span>🦉 透视符 ×${meta.items.peek}</span>
+      <button class="p-btn" data-act="buy" data-arg="peek" ${meta.gold >= ITEMS.peek.cost ? '' : 'disabled'}>买 ${ITEMS.peek.cost}🪙</button>
+    </div>
+    <div class="p-row">
+      <span>🧿 撤回符 ×${meta.items.guard}</span>
+      <button class="p-btn" data-act="buy" data-arg="guard" ${meta.gold >= ITEMS.guard.cost ? '' : 'disabled'}>买 ${ITEMS.guard.cost}🪙</button>
+    </div>
+    ${Object.entries(CREWS).filter(([k]) => !CREWS[k].owned).map(([k, c]) => `
+      <div class="p-row">
+        <span>${c.icon} ${c.name} <span class="dim">${c.desc}</span></span>
+        ${meta.crew[k]
+          ? '<span class="tag">已雇佣 ✔</span>'
+          : `<button class="p-btn" data-act="hire" data-arg="${k}" ${meta.gold >= c.cost ? '' : 'disabled'}>雇佣 ${c.cost}🪙</button>`}
+      </div>`).join('')}
+
+    <button class="main-btn" style="margin-top:16px" data-act="next">前往下一关 →</button>
+  `);
+}
+
+/* ---------- 面板动作分发 ---------- */
+function handleAct(act, arg) {
+  if (act === 'crew') {
+    panelCtx.crewKey = arg;
+    openPrep();
+  } else if (act === 'hint') {
+    const c = CREWS[arg];
+    openPanel(panelBody.innerHTML); // 防抖动重绘（保持内容）
+    panelBody.querySelector('.p-sub').insertAdjacentHTML('afterend',
+      `<div class="p-row"><span class="tag warn">${c.name} 还没雇佣：回村在客栈花 ${c.cost}🪙 雇佣</span></div>`);
+  } else if (act === 'item') {
+    panelCtx.carry[arg] = !panelCtx.carry[arg];
+    openPrep();
+  } else if (act === 'go') {
+    openPassivePick();
+  } else if (act === 'pick') {
+    closePanel();
+    startLevel(panelCtx.level, arg);
+  } else if (act === 'deliver') {
+    const o = meta.orderCur;
+    if (o && canDeliver(o)) {
+      for (const c of ['f', 'm', 'r']) meta.res[c] -= o[c];
+      meta.gold += orderReward(o);
+      meta.rep += 2;
+      meta.ordersDone++;
+      meta.orderCur = null;
+      saveMeta();
+      openVillage();
+    }
+  } else if (act === 'buy') {
+    if (arg === 'barn' && meta.gold >= 20 + meta.upgrades.barn * 15) {
+      meta.gold -= 20 + meta.upgrades.barn * 15;
+      meta.upgrades.barn++;
+    } else if (arg === 'workshop' && meta.gold >= 30 + meta.upgrades.workshop * 20) {
+      meta.gold -= 30 + meta.upgrades.workshop * 20;
+      meta.upgrades.workshop++;
+    } else if (ITEMS[arg] && meta.gold >= ITEMS[arg].cost) {
+      meta.gold -= ITEMS[arg].cost;
+      meta.items[arg]++;
+    }
+    saveMeta();
+    openVillage();
+  } else if (act === 'hire') {
+    const c = CREWS[arg];
+    if (c && !meta.crew[arg] && meta.gold >= c.cost) {
+      meta.gold -= c.cost;
+      meta.crew[arg] = true;
+      saveMeta();
+    }
+    openVillage();
+  } else if (act === 'next') {
+    const next = state.level + 1;
+    meta.unlocked = Math.max(meta.unlocked, next);
+    saveMeta();
+    closePanel();
+    toPrep(next);
+  }
+}
+
+panelBody.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.disabled) return;
+  handleAct(b.dataset.act, b.dataset.arg);
+});
+
+/* ================================================================
+ *  胜负
+ * ================================================================ */
+
+function winLevel() {
+  state.playing = false;
+  updateProps();
+  bankAll();
+
+  // 通关金币
+  const clearGold = Math.round((8 + state.level * 2) * goldMult());
+  meta.gold += clearGold;
+  meta.unlocked = Math.max(meta.unlocked, state.level + 1);
+  meta.best = Math.max(meta.best, state.score);
+  saveMeta();
+
+  panelCtx.level = state.level;
+  setTimeout(() => openVillage(), 350);
+}
+
 function loseLevel() {
   state.playing = false;
   updateProps();
+  bankAll();
+
   setTimeout(() => {
     showOverlay({
       emoji: '😵',
       title: '槽位满了…',
-      desc: `本局得分：${state.score} 分\n还有小羊被困在草堆里，再试一次吧！`,
-      btnText: '再来一局',
-      onClick: () => { hideOverlay(); startLevel(state.level); },
+      desc: `本关得分：${state.score} 分\n收获的资源已存入仓库。\n还有小羊被困在草堆里，整装再出发！`,
+      btnText: '重新准备出发',
+      onClick: () => { hideOverlay(); toPrep(state.level); },
     });
   }, 260);
 }
@@ -1227,36 +1896,64 @@ function loseLevel() {
 /* ================================================================
  *  关卡启动
  * ================================================================ */
-function startLevel(level) {
-  /* --- 1. 重置状态 --- */
+
+function startLevel(level, passiveId) {
+  /* --- 1. 应用本关配置（伙伴 / 天气 / 被动 / 道具） --- */
   state.level = level;
+  state.passive = passiveId || null;
+  state.crewKey = panelCtx.crewKey || 'farmer';
+  state.weather = state.weather || 'sunny';
+  state.comboWindow = state.weather === 'rain' ? COMBO_WINDOW - 1000 : COMBO_WINDOW;
+  state.slotCount = SLOT_COUNT + (state.passive === 'slot' ? 1 : 0);
+  state.propMax = { shuffle: 1, undo: state.passive === 'undo' ? 2 : 1, remove: 1 };
+  state.carry = { peek: false, guard: false };
+  state.guardUsed = false;
+  state.gain = { f: 0, m: 0, r: 0 };
+  state.overflow = 0;
+  state.wildcard = null;
+
+  const ch0 = chapterOf(level);
+  if (state.passive === 'wild') {
+    // 万能牌：从本关图案池里随机挑一种
+    const idx = Math.floor(Math.random() * ch0.emojis.length);
+    state.wildcard = ch0.emojis[idx];
+  }
+
+  // 消耗品：从仓库扣除并生效
+  const wantPeek = state.passive === 'peek' || panelCtx.carry.peek;
+  const wantGuard = panelCtx.carry.guard;
+  if (panelCtx.carry.peek && meta.items.peek > 0) { meta.items.peek--; state.carry.peek = true; }
+  if (panelCtx.carry.guard && meta.items.guard > 0) { meta.items.guard--; state.carry.guard = true; }
+  saveMeta();
+
+  /* --- 2. 重置对局状态 --- */
   state.slots = [];
   state.stash = [];
   state.history = [];
-  state.propsUsed = { shuffle: false, undo: false, remove: false };
+  state.propsUsed = {};
   state.playing = false;
-
   if (level === 1) state.score = 0;
-
-  // 章节主题与连击重置
-  const ch = chapterOf(level);
-  document.body.dataset.chapter = String(ch.index);
   combo = 0;
   lastMatchAt = 0;
   clearTimeout(comboTimer);
   document.getElementById('combo-badge').classList.add('hidden');
 
+  document.body.dataset.chapter = String(ch0.index);
+
   cardLayer.innerHTML = '';
   stashEl.classList.add('hidden');
   clearTimeout(resolveTimer);
 
-  /* --- 2. 生成关卡数据 --- */
-  state.cards = generateLevel(level);
+  /* --- 3. 生成关卡 --- */
+  const crewCat = CREWS[state.crewKey].cat;
+  const gen = generateLevel(level, crewCat);
+  state.cards = gen.cards;
+  state.expected = gen.expected;
 
-  /* --- 3. 计算尺寸 --- */
+  /* --- 4. 建格子与卡片 DOM --- */
+  buildCells();
   computeSizes();
 
-  /* --- 4. 创建卡片 DOM --- */
   for (const card of state.cards) {
     const el = document.createElement('div');
     el.className = 'card';
@@ -1270,25 +1967,28 @@ function startLevel(level) {
     cardLayer.appendChild(el);
   }
 
-  /* --- 5. 初始布局与状态刷新 --- */
+  /* --- 5. 初始布局与刷新 --- */
   state.playing = true;
-
   updateBlocked();
   positionAll(true);
   updateHUD();
   updateProps();
 
-  // 淡入
   requestAnimationFrame(() => {
     state.cards.forEach(c => { if (c.el) c.el.style.opacity = '1'; });
   });
+
+  // 透视：被动或携带的道具
+  if (wantPeek || state.passive === 'peek') {
+    document.body.classList.add('peeking');
+    setTimeout(() => document.body.classList.remove('peeking'), 4000);
+  }
 }
 
 /* ================================================================
  *  全局事件绑定
  * ================================================================ */
 
-// 道具按钮
 document.querySelectorAll('.prop-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const key = btn.dataset.prop;
@@ -1298,7 +1998,6 @@ document.querySelectorAll('.prop-btn').forEach(btn => {
   });
 });
 
-// 窗口尺寸变化
 let resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
@@ -1308,38 +2007,42 @@ window.addEventListener('resize', () => {
   }, 120);
 });
 
-// 防止移动端双击缩放
 document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
 
 /* ================================================================
  *  初始化
  * ================================================================ */
 (function init() {
+  loadMeta();
   buildCells();
   computeSizes();
-  loadSave();
   updateHUD();
 
-  // 开场剧情：老玩家可以直接继续，新手从第一关开始
-  const STORY = '深夜，大灰狼闯进羊村，把羊群冲散在草堆里。\n你是牧场的小小牧羊人——\n点击未被遮挡的卡片放进下方槽位，\n凑齐 3 张相同图案就能救出小羊。\n槽位满 7 张就失败啦～';
+  const STORY =
+    '狼群夜袭牧场，羊群四散，村子也断了粮。\n' +
+    '你带领一支拾荒小队深入遗迹与矿洞——\n' +
+    '点击未被遮挡的卡片放进槽位，凑齐 3 张相同图案即可消除。\n' +
+    '不同图案产出不同资源（🌾食物 / ⛏️材料 / ✨符文），\n' +
+    '回村交付订单、升级建设，让小队走得更远。\n' +
+    '槽位满了就会被击退哦～';
 
-  if (save.unlocked > 1) {
+  if (meta.unlocked > 1) {
     showOverlay({
       emoji: '🐑',
-      title: '羊了个羊 · 救援记',
-      desc: `${STORY}\n\n欢迎回来！已解锁第 ${save.unlocked} 关，最高分 ${save.best}。`,
-      btnText: `继续营救（第 ${save.unlocked} 关）`,
-      onClick: () => { hideOverlay(); startLevel(save.unlocked); },
-      btn2Text: '从头开始',
-      onClick2: () => { hideOverlay(); startLevel(1); },
+      title: '羊了个羊 · 拾荒远征',
+      desc: `${STORY}\n\n欢迎回来，队长！已解锁第 ${meta.unlocked} 关，最高分 ${meta.best}。`,
+      btnText: `继续远征（第 ${meta.unlocked} 关）`,
+      onClick: () => { hideOverlay(); toPrep(meta.unlocked); },
+      btn2Text: '从第 1 关出发',
+      onClick2: () => { hideOverlay(); toPrep(1); },
     });
   } else {
     showOverlay({
       emoji: '🐑',
-      title: '羊了个羊 · 救援记',
+      title: '羊了个羊 · 拾荒远征',
       desc: STORY,
-      btnText: '开始营救',
-      onClick: () => { hideOverlay(); startLevel(1); },
+      btnText: '组建小队',
+      onClick: () => { hideOverlay(); toPrep(1); },
     });
   }
 })();
